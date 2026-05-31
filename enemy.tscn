@@ -1,0 +1,54 @@
+[gd_scene format=3 uid="uid://drjx0wt7l47oq"]
+
+[ext_resource type="Texture2D" uid="uid://djb4oog4nc0ps" path="res://sucaibao/monsters/8.png" id="1_qi2p4"]
+[ext_resource type="Script" uid="uid://fdcjusvwc8q3" path="res://Enemy.cs" id="2_epg4t"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_4gyqm"]
+bg_color = Color(1, 0.2, 0.2, 1)
+corner_radius_top_left = 4
+corner_radius_top_right = 4
+corner_radius_bottom_right = 4
+corner_radius_bottom_left = 4
+
+[node name="enemy" type="Sprite2D" unique_id=906378511]
+position = Vector2(872, 423)
+scale = Vector2(2.8749998, 2.78125)
+texture = ExtResource("1_qi2p4")
+script = ExtResource("2_epg4t")
+
+[node name="hpbar" type="Control" parent="." unique_id=151390846]
+layout_mode = 3
+anchors_preset = 0
+offset_right = 40.0
+offset_bottom = 40.0
+
+[node name="hp_actual" type="ProgressBar" parent="hpbar" unique_id=587084999]
+visible = false
+layout_mode = 0
+offset_right = 4.0
+offset_bottom = 27.0
+
+[node name="hp_visual" type="ProgressBar" parent="hpbar" unique_id=1378607281]
+layout_mode = 0
+offset_left = -54.95653
+offset_top = -54.292137
+offset_right = 38.260876
+offset_bottom = -36.292137
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_font_sizes/font_size = 10
+theme_override_styles/fill = SubResource("StyleBoxFlat_4gyqm")
+show_percentage = false
+
+[node name="hplabel" type="Label" parent="hpbar" unique_id=1678531296]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -54.956528
+offset_top = -56.792137
+offset_right = -1.3912964
+offset_bottom = -73.79214
+grow_horizontal = 2
+grow_vertical = 2
+horizontal_alignment = 1
+vertical_alignment = 1

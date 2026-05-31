@@ -1,0 +1,41 @@
+{
+  "UnitName": "邪恶兔",
+  "TexturePath": "res://character_picture/evilrabbit.png",
+  "Hp": 200,
+  "HpMax": 200,
+  "Attack": 10,
+  "CritRate": 0.25,
+  "CritDamage": 1.5,
+  "IsPlayerUnit": true,
+  "MaxEnergy": 100,
+  "Skills": [
+    {
+      "SkillId": "rabbit_passive",
+      "SkillName": "向死而生",
+      "Description": "每当自身当前生命值减少或增加1%，提高自身2%的暴击伤害与1%暴击率，持续3个回合。暴击率加成最多50%，暴击伤害加成最多100%，触发时刷新持续时间。",
+      "Type": "Passive",
+      "EnergyCost": 0
+    },
+    {
+      "SkillId": "rabbit_normal",
+      "SkillName": "普通攻击",
+      "Description": "对目标造成【5%自身最大生命值】的伤害。",
+      "Type": "Normal",
+      "EnergyCost": -10
+    },
+    {
+      "SkillId": "rabbit_special",
+      "SkillName": "燃魂",
+      "Description": "消耗全体友方角色【各10%该角色最大生命值】的血量（不会导致友方角色死亡，最多将生命值降低为1），随后对目标造成【50%本次消耗血量总和】伤害。",
+      "Type": "Special",
+      "EnergyCost": -40
+    },
+    {
+      "SkillId": "rabbit_ult",
+      "SkillName": "血魇",
+      "Description": "对目标造成【20%自身最大生命值】的伤害，随后回复自身【20%最大生命值】的血量。",
+      "Type": "Ultimate",
+      "EnergyCost": 100
+    }
+  ]
+}

@@ -1,0 +1,95 @@
+[gd_scene format=3 uid="uid://b0mygk8k3tjud"]
+
+[ext_resource type="Texture2D" uid="uid://d2pskkag5ogkh" path="res://sucaibao - 副本/GameAssets/background.png" id="1_0xm2m"]
+[ext_resource type="Script" uid="uid://dug1rx4hrl0j1" path="res://Main.cs" id="1_lquwl"]
+[ext_resource type="PackedScene" uid="uid://bq4ya4urpdyvd" path="res://ui.tscn" id="2_1bvp3"]
+[ext_resource type="PackedScene" uid="uid://b00dsd2w8yru6" path="res://player.tscn" id="2_h2yge"]
+[ext_resource type="PackedScene" uid="uid://drjx0wt7l47oq" path="res://enemy.tscn" id="3_h2yge"]
+[ext_resource type="Texture2D" uid="uid://c7vqhox4iheyp" path="res://2dres - 副本/char/poor-kid1.png" id="5_5vw27"]
+[ext_resource type="Texture2D" uid="uid://8tsmkit8gmxi" path="res://2dres - 副本/shot.png" id="6_7mycd"]
+[ext_resource type="Texture2D" uid="uid://c66rjox2k2mga" path="res://2dres - 副本/char/1.png" id="6_kek77"]
+[ext_resource type="PackedScene" uid="uid://ctebrkl5hbx8b" path="res://effects/ParticleEffectManager.tscn" id="9_kek77"]
+
+[sub_resource type="LabelSettings" id="LabelSettings_lquwl"]
+
+[sub_resource type="Curve" id="Curve_272bh"]
+_data = [Vector2(0.018018007, 0.9622642), 0.0, 0.0, 0, 0, Vector2(0.9279279, 0.05660379), 0.0, 0.0, 0, 0]
+point_count = 2
+
+[sub_resource type="CurveTexture" id="CurveTexture_5vw27"]
+curve = SubResource("Curve_272bh")
+
+[sub_resource type="ParticleProcessMaterial" id="ParticleProcessMaterial_kek77"]
+particle_flag_disable_z = true
+emission_shape = 1
+emission_sphere_radius = 1.0
+spread = 180.0
+initial_velocity_min = 50.0
+initial_velocity_max = 150.0
+gravity = Vector3(0, 0, 0)
+scale_min = 5.0
+scale_max = 20.0
+emission_curve = SubResource("CurveTexture_5vw27")
+
+[node name="Main" type="Node2D" unique_id=1909997460]
+script = ExtResource("1_lquwl")
+
+[node name="CanvasLayer" type="CanvasLayer" parent="." unique_id=2119086812]
+layer = -1
+
+[node name="BG" type="TextureRect" parent="CanvasLayer" unique_id=789953617]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+texture = ExtResource("1_0xm2m")
+
+[node name="ui" parent="CanvasLayer" unique_id=94057453 instance=ExtResource("2_1bvp3")]
+
+[node name="player_takeaway" parent="." unique_id=1579825371 instance=ExtResource("2_h2yge")]
+position = Vector2(243, 399)
+rotation = -0.0022321607
+scale = Vector2(3.417048, 3.9185)
+texture = ExtResource("5_5vw27")
+
+[node name="player_chicken" parent="." unique_id=1670085131 instance=ExtResource("2_h2yge")]
+position = Vector2(339.00003, 539.00006)
+scale = Vector2(3.0888388, 3.542127)
+_playerTeamIndex = 1
+
+[node name="player_rabbit" parent="." unique_id=1087659926 instance=ExtResource("2_h2yge")]
+position = Vector2(555, 454)
+scale = Vector2(3.417048, 3.9185)
+texture = ExtResource("6_kek77")
+_playerTeamIndex = 2
+
+[node name="enemy" parent="." unique_id=906378511 instance=ExtResource("3_h2yge")]
+position = Vector2(932.99994, 410.00003)
+scale = Vector2(4.101561, 3.967815)
+
+[node name="EnemyNameLabel" type="Label" parent="." unique_id=1835330291]
+offset_left = 740.0
+offset_top = 547.0
+offset_right = 1014.0
+offset_bottom = 605.0
+label_settings = SubResource("LabelSettings_lquwl")
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="FireballContainer" type="Node2D" parent="." unique_id=1819926214]
+
+[node name="FireballSprite" type="Sprite2D" parent="FireballContainer" unique_id=1501900548]
+visible = false
+scale = Vector2(3, 3)
+texture = ExtResource("6_7mycd")
+
+[node name="ExplosionContainer" type="Node2D" parent="." unique_id=504058082]
+
+[node name="ExplosionParticles" type="GPUParticles2D" parent="ExplosionContainer" unique_id=25810661]
+emitting = false
+amount = 30
+lifetime = 0.5
+process_material = SubResource("ParticleProcessMaterial_kek77")
+
+[node name="ParticleEffectManager" parent="." unique_id=2086645421 instance=ExtResource("9_kek77")]

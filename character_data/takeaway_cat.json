@@ -1,0 +1,41 @@
+{
+  "UnitName": "外卖猫",
+  "TexturePath": "res://character_picture/deliverycat.png",
+  "Hp": 150,
+  "HpMax": 150,
+  "Attack": 5,
+  "CritRate": 0.15,
+  "CritDamage": 1.5,
+  "IsPlayerUnit": true,
+  "MaxEnergy": 60,
+  "Skills": [
+    {
+      "SkillId": "cat_passive",
+      "SkillName": "回头客",
+      "Description": "外卖猫释放技能时会为目标施加熟客印记。持有熟客印记的友方角色将会提高【30%外卖猫自身最大生命值】的最大生命值，且损失生命值后，外卖猫还会额外为其回复【5%外卖猫自身最大生命值】的血量。熟客印记最多持续三个回合，期间再次叠加可刷新持续时间。",
+      "Type": "Passive",
+      "EnergyCost": 0
+    },
+    {
+      "SkillId": "cat_normal",
+      "SkillName": "普通攻击",
+      "Description": "对目标造成【5%自身最大生命值】的伤害",
+      "Type": "Normal",
+      "EnergyCost": -10
+    },
+    {
+      "SkillId": "cat_special",
+      "SkillName": "喵送外卖，请签收",
+      "Description": "为全体友方角色回复【10%外卖猫自身最大生命值】的血量。",
+      "Type": "Special",
+      "EnergyCost": -40
+    },
+    {
+      "SkillId": "cat_ult",
+      "SkillName": "爆冲！喵手回春",
+      "Description": "为全体友方角色回复【30%外卖猫自身最大生命值】的血量，对敌人造成【50%本次总回复量】的伤害。",
+      "Type": "Ultimate",
+      "EnergyCost": 60
+    }
+  ]
+}

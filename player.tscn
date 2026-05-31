@@ -1,0 +1,56 @@
+[gd_scene format=3 uid="uid://b00dsd2w8yru6"]
+
+[ext_resource type="Texture2D" uid="uid://cggifg0v6omxl" path="res://sucaibao/GameAssets/player.png" id="1_4flbx"]
+[ext_resource type="Script" uid="uid://by2kdbxqrtt81" path="res://Player.cs" id="2_sweqy"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_onrkg"]
+bg_color = Color(0.5647059, 0.93333334, 0.5647059, 1)
+corner_radius_top_left = 2
+corner_radius_top_right = 2
+corner_radius_bottom_right = 2
+corner_radius_bottom_left = 2
+
+[node name="player" type="Sprite2D" unique_id=1579825371]
+position = Vector2(388, 486.5)
+scale = Vector2(3, 3.4375002)
+texture = ExtResource("1_4flbx")
+script = ExtResource("2_sweqy")
+
+[node name="HpBar" type="Control" parent="." unique_id=537182954]
+layout_mode = 3
+anchors_preset = 0
+offset_left = -40.666664
+offset_top = -21.090912
+offset_right = 40.0
+offset_bottom = -10.981819
+
+[node name="hp_actual" type="ProgressBar" parent="HpBar" unique_id=1962927562]
+visible = false
+layout_mode = 0
+offset_right = 4.0
+offset_bottom = 27.0
+
+[node name="hp_visual" type="ProgressBar" parent="HpBar" unique_id=270738902]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_font_sizes/font_size = 1
+theme_override_styles/fill = SubResource("StyleBoxFlat_onrkg")
+show_percentage = false
+
+[node name="playerhpLabel" type="Label" parent="HpBar" unique_id=605359934]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_top = -6.4454575
+offset_bottom = 6.44545
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_font_sizes/font_size = 9
+horizontal_alignment = 1
+vertical_alignment = 1

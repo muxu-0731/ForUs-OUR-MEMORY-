@@ -1,0 +1,70 @@
+[gd_scene format=3 uid="uid://ctebrkl5hbx8b"]
+
+[ext_resource type="Script" uid="uid://ccfq18byyjquy" path="res://effects/ParticleEffectManager.cs" id="1_4fixt"]
+[ext_resource type="Texture2D" uid="uid://8tsmkit8gmxi" path="res://2dres/shot.png" id="1_u0qgc"]
+[ext_resource type="PackedScene" uid="uid://dkv1hdaavw1wt" path="res://effects/burning_soul_effect.tscn" id="3_idijm"]
+
+[sub_resource type="Gradient" id="Gradient_4fixt"]
+offsets = PackedFloat32Array(0.3152174, 1)
+
+[sub_resource type="GradientTexture1D" id="GradientTexture1D_idijm"]
+gradient = SubResource("Gradient_4fixt")
+
+[sub_resource type="ParticleProcessMaterial" id="ParticleProcessMaterial_4fixt"]
+particle_flag_disable_z = true
+spread = 180.0
+initial_velocity_min = 264.29
+initial_velocity_max = 432.15
+gravity = Vector3(0, 98, 0)
+scale_min = 15.0
+scale_max = 20.0
+color = Color(1, 0.1254902, 0.21568628, 1)
+color_ramp = SubResource("GradientTexture1D_idijm")
+
+[sub_resource type="Gradient" id="Gradient_idijm"]
+offsets = PackedFloat32Array(0.38043478, 1)
+
+[sub_resource type="GradientTexture1D" id="GradientTexture1D_1688c"]
+gradient = SubResource("Gradient_idijm")
+
+[sub_resource type="ParticleProcessMaterial" id="ParticleProcessMaterial_i7ca7"]
+particle_flag_disable_z = true
+initial_velocity_min = 496.41998
+initial_velocity_max = 542.85
+gravity = Vector3(0, 98, 0)
+scale_min = 8.139999
+scale_max = 18.85
+color = Color(1, 0.11764706, 0.03529412, 1)
+color_ramp = SubResource("GradientTexture1D_1688c")
+
+[node name="ParticleEffectManager" type="Node2D" unique_id=2086645421]
+script = ExtResource("1_4fixt")
+
+[node name="BloodNightmare_SoulBurst" type="GPUParticles2D" parent="." unique_id=1291050766]
+position = Vector2(639, 469)
+emitting = false
+amount = 200
+lifetime = 6.359999999999999
+one_shot = true
+randomness = 0.42
+process_material = SubResource("ParticleProcessMaterial_4fixt")
+
+[node name="BloodNightmare_BigSphere" type="Sprite2D" parent="." unique_id=1403243779]
+visible = false
+modulate = Color(1, 0.13333334, 0.13333334, 1)
+position = Vector2(635, 437)
+scale = Vector2(6.367408, 6.5677147)
+texture = ExtResource("1_u0qgc")
+
+[node name="BloodNightmare_Explosion" type="GPUParticles2D" parent="." unique_id=317630538]
+position = Vector2(830, 458)
+emitting = false
+amount = 80
+lifetime = 0.6
+one_shot = true
+process_material = SubResource("ParticleProcessMaterial_i7ca7")
+
+[node name="BurningSoul_Effect" parent="." unique_id=488537727 instance=ExtResource("3_idijm")]
+position = Vector2(311, 284)
+amount = 60
+lifetime = 1.32

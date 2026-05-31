@@ -1,0 +1,41 @@
+{
+  "UnitName": "小鸡",
+  "TexturePath": "res://character_picture/chicken.png",
+  "Hp": 150,
+  "HpMax": 150,
+  "Attack": 5,
+  "CritRate": 0.08,
+  "CritDamage": 1.5,
+  "IsPlayerUnit": true,
+  "MaxEnergy": 60,
+  "Skills": [
+    {
+      "SkillId": "chicken_passive",
+      "SkillName": "游戏锐评官",
+      "Description": "友方其他角色释放攻击并对命中敌人时，小鸡释放一次【默契攻击】，对敌人造成【2%自身最大生命值】的伤害。小鸡每次攻击都会使敌人陷入一层【锐评】，每层【锐评】都会使敌人受到的所有伤害提高5%，与此同时被视为持续伤害，在敌人回合开始时，对该敌人造成【1.5%自身最大生命值】的伤害。最多叠加十层，持续三个回合，叠加可额外刷新持续时间。",
+      "Type": "Passive",
+      "EnergyCost": 0
+    },
+    {
+      "SkillId": "chicken_normal",
+      "SkillName": "普通攻击",
+      "Description": "对目标造成5%自身最大生命值的伤害",
+      "Type": "Normal",
+      "EnergyCost": -10
+    },
+    {
+      "SkillId": "chicken_special",
+      "SkillName": "沉浸式体验？",
+      "Description": "对敌人造成【5%自身最大生命值】的伤害，额外施加两层【锐评】，并使该敌人在接下来的三回合内禁疗。",
+      "Type": "Special",
+      "EnergyCost": -40
+    },
+    {
+      "SkillId": "chicken_ult",
+      "SkillName": "轻松过关！",
+      "Description": "对敌人造成【30%自身最大生命值】的伤害，并使该敌人立即陷入十层【锐评】,同时额外在接下来的三回合内降低该敌人60%防御力。",
+      "Type": "Ultimate",
+      "EnergyCost": 60
+    }
+  ]
+}

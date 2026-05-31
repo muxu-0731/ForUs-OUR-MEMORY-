@@ -1,0 +1,41 @@
+{
+  "UnitName": "苹果大王",
+  "TexturePath": "res://character_picture/apple_queen.png",
+  "Hp": 100,
+  "HpMax": 100,
+  "Attack": 150,
+  "CritRate": 0.05,
+  "CritDamage": 1.5,
+  "IsPlayerUnit": true,
+  "MaxEnergy": 80,
+  "Skills": [
+    {
+      "SkillId": "apple_passive",
+      "SkillName": "枭果镌刻的锢痕",
+      "Description": "苹果大王释放的任何攻击，都会使命中的敌人陷入【锢痕】。【锢痕】被视为【持续伤害】，持续三回合。【锢痕】会使敌人在其回合开始时，受到【20%攻击力】的伤害。该效果不可叠加，重复施加刷新其持续时间。",
+      "Type": "Passive",
+      "EnergyCost": 0
+    },
+    {
+      "SkillId": "apple_normal",
+      "SkillName": "蚀果缠魂",
+      "Description": "对目标造成【5%攻击力】的伤害，为其施加【锢痕】。",
+      "Type": "Normal",
+      "EnergyCost": -10
+    },
+    {
+      "SkillId": "apple_special",
+      "SkillName": "罡果撼心的锋芒",
+      "Description": "对选中单个敌人造成【30%攻击力】的伤害，为其施加【锢痕】。随后将该敌人持有的所有【持续伤害】扩散至其相邻的敌人。若相邻的敌人已有该种类型的【持续伤害】，则会按对应规则叠加对应层数。",
+      "Type": "Special",
+      "EnergyCost": -40
+    },
+    {
+      "SkillId": "apple_ult",
+      "SkillName": "狂绪漫野，万痕锁身",
+      "Description": "对所有敌人造成【50%攻击力】的伤害，为这些敌人施加【锢痕】。随后引爆这些敌人持有的所有【持续伤害】，使它（们）提前结算，且不减少其任何持续时间。",
+      "Type": "Ultimate",
+      "EnergyCost": 100
+    }
+  ]
+}

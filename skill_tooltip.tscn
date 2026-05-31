@@ -1,0 +1,58 @@
+[gd_scene format=3 uid="uid://dotnpiyokl2x4"]
+
+[ext_resource type="Script" uid="uid://cn8a1jb6ftd8p" path="res://SkillTooltip.cs" id="1_jw4lv"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_nomyr"]
+bg_color = Color(0.6, 0.6, 0.6, 0.48235294)
+border_width_left = 6
+border_width_top = 6
+border_width_right = 6
+border_width_bottom = 6
+border_color = Color(0, 0, 0, 1)
+corner_radius_top_left = 6
+corner_radius_top_right = 6
+corner_radius_bottom_right = 6
+corner_radius_bottom_left = 6
+
+[sub_resource type="FontVariation" id="FontVariation_jw4lv"]
+
+[sub_resource type="LabelSettings" id="LabelSettings_thc64"]
+font_size = 27
+shadow_size = 4
+shadow_color = Color(0.17567867, 0.17567867, 0, 1)
+
+[sub_resource type="LabelSettings" id="LabelSettings_1kcj2"]
+
+[node name="SkillTooltip" type="PanelContainer" unique_id=1739955645]
+offset_left = 133.0
+offset_top = 124.0
+offset_right = 484.0
+offset_bottom = 411.0
+size_flags_horizontal = 4
+size_flags_vertical = 4
+theme_override_styles/panel = SubResource("StyleBoxFlat_nomyr")
+script = ExtResource("1_jw4lv")
+
+[node name="MarginContainer" type="MarginContainer" parent="." unique_id=759885261]
+layout_mode = 2
+theme_override_constants/margin_left = 12
+theme_override_constants/margin_top = 12
+theme_override_constants/margin_right = 12
+theme_override_constants/margin_bottom = 12
+
+[node name="Content" type="VBoxContainer" parent="MarginContainer" unique_id=874821190]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="TitleLabel" type="Label" parent="MarginContainer/Content" unique_id=41814578]
+layout_mode = 2
+theme_override_fonts/font = SubResource("FontVariation_jw4lv")
+theme_override_font_sizes/font_size = 16
+label_settings = SubResource("LabelSettings_thc64")
+uppercase = true
+
+[node name="DescLabel" type="Label" parent="MarginContainer/Content" unique_id=1730227658]
+custom_minimum_size = Vector2(320, 320)
+layout_mode = 2
+label_settings = SubResource("LabelSettings_1kcj2")
+autowrap_mode = 2
