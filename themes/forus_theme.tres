@@ -1,0 +1,7 @@
+[gd_resource type="Theme" load_steps=2 format=3]
+
+[ext_resource type="FontFile" path="res://fonts/simhei.ttf" id="1_6s51n"]
+
+[resource]
+default_font = ExtResource("1_6s51n")
+default_font_size = 16
