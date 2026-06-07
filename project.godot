@@ -23,13 +23,13 @@ GlobalScript="*uid://c71shdot7l3uj"
 
 window/stretch/mode="canvas_items"
 
-[gui]
-
-theme/custom="res://themes/forus_theme.tres"
-
 [dotnet]
 
 project/assembly_name="turn_based combat"
+
+[gui]
+
+theme/custom="res://themes/forus_theme.tres"
 
 [physics]
 

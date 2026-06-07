@@ -3,20 +3,24 @@
   "WorkspaceRootPath": "D:\\godot_program\\turn-based-combat\\",
   "Documents": [
     {
-      "AbsoluteMoniker": "D:0:0:{3B37F5A1-87AA-40DA-9B75-673D2F9C1DDA}|turn_based combat.csproj|d:\\godot_program\\turn-based-combat\\mainmenu.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{3B37F5A1-87AA-40DA-9B75-673D2F9C1DDA}|turn_based combat.csproj|solutionrelative:mainmenu.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{3B37F5A1-87AA-40DA-9B75-673D2F9C1DDA}|turn_based combat.csproj|d:\\godot_program\\turn-based-combat\\effects\\particleeffectmanager.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{3B37F5A1-87AA-40DA-9B75-673D2F9C1DDA}|turn_based combat.csproj|solutionrelative:effects\\particleeffectmanager.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
       "AbsoluteMoniker": "D:0:0:{3B37F5A1-87AA-40DA-9B75-673D2F9C1DDA}|turn_based combat.csproj|d:\\godot_program\\turn-based-combat\\globalscript.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
       "RelativeMoniker": "D:0:0:{3B37F5A1-87AA-40DA-9B75-673D2F9C1DDA}|turn_based combat.csproj|solutionrelative:globalscript.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
       "AbsoluteMoniker": "D:0:0:{3B37F5A1-87AA-40DA-9B75-673D2F9C1DDA}|turn_based combat.csproj|d:\\godot_program\\turn-based-combat\\ui.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
       "RelativeMoniker": "D:0:0:{3B37F5A1-87AA-40DA-9B75-673D2F9C1DDA}|turn_based combat.csproj|solutionrelative:ui.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{3B37F5A1-87AA-40DA-9B75-673D2F9C1DDA}|turn_based combat.csproj|d:\\godot_program\\turn-based-combat\\characterselect.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{3B37F5A1-87AA-40DA-9B75-673D2F9C1DDA}|turn_based combat.csproj|solutionrelative:characterselect.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{3B37F5A1-87AA-40DA-9B75-673D2F9C1DDA}|turn_based combat.csproj|d:\\godot_program\\turn-based-combat\\mainmenu.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{3B37F5A1-87AA-40DA-9B75-673D2F9C1DDA}|turn_based combat.csproj|solutionrelative:mainmenu.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{3B37F5A1-87AA-40DA-9B75-673D2F9C1DDA}|turn_based combat.csproj|d:\\godot_program\\turn-based-combat\\effects\\particleeffectmanager.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{3B37F5A1-87AA-40DA-9B75-673D2F9C1DDA}|turn_based combat.csproj|solutionrelative:effects\\particleeffectmanager.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
       "AbsoluteMoniker": "D:0:0:{3B37F5A1-87AA-40DA-9B75-673D2F9C1DDA}|turn_based combat.csproj|d:\\godot_program\\turn-based-combat\\enemy.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
@@ -42,50 +46,65 @@
       "DocumentGroups": [
         {
           "DockedWidth": 200,
-          "SelectedChildIndex": 2,
+          "SelectedChildIndex": 0,
           "Children": [
             {
               "$type": "Document",
-              "DocumentIndex": 2,
+              "DocumentIndex": 0,
               "Title": "GlobalScript.cs",
               "DocumentMoniker": "D:\\godot_program\\turn-based-combat\\GlobalScript.cs",
               "RelativeDocumentMoniker": "GlobalScript.cs",
               "ToolTip": "D:\\godot_program\\turn-based-combat\\GlobalScript.cs",
               "RelativeToolTip": "GlobalScript.cs",
-              "ViewState": "AgIAAO4AAAAAAAAAAAAAAPsAAAAoAAAAAAAAAA==",
+              "ViewState": "AgIAAFQBAAAAAAAAAAAmwMUBAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
               "WhenOpened": "2026-03-16T05:56:47.975Z",
-              "IsPinned": true
+              "IsPinned": true,
+              "EditorCaption": ""
             },
             {
               "$type": "Document",
-              "DocumentIndex": 3,
+              "DocumentIndex": 1,
               "Title": "Ui.cs",
               "DocumentMoniker": "D:\\godot_program\\turn-based-combat\\Ui.cs",
               "RelativeDocumentMoniker": "Ui.cs",
               "ToolTip": "D:\\godot_program\\turn-based-combat\\Ui.cs",
               "RelativeToolTip": "Ui.cs",
-              "ViewState": "AgIAAG4BAAAAAAAAAAAAwL4BAAAFAAAAAAAAAA==",
+              "ViewState": "AgIAAF0AAAAAAAAAAAAIwFIDAAAOAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
               "WhenOpened": "2026-03-16T05:53:55.66Z",
-              "IsPinned": true
+              "IsPinned": true,
+              "EditorCaption": ""
             },
             {
               "$type": "Document",
-              "DocumentIndex": 0,
+              "DocumentIndex": 2,
+              "Title": "CharacterSelect.cs",
+              "DocumentMoniker": "D:\\godot_program\\turn-based-combat\\CharacterSelect.cs",
+              "RelativeDocumentMoniker": "CharacterSelect.cs",
+              "ToolTip": "D:\\godot_program\\turn-based-combat\\CharacterSelect.cs",
+              "RelativeToolTip": "CharacterSelect.cs",
+              "ViewState": "AgIAAH0AAAAAAAAAAAAUwAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-05-31T10:09:25.702Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 3,
               "Title": "MainMenu.cs",
               "DocumentMoniker": "D:\\godot_program\\turn-based-combat\\MainMenu.cs",
               "RelativeDocumentMoniker": "MainMenu.cs",
               "ToolTip": "D:\\godot_program\\turn-based-combat\\MainMenu.cs",
               "RelativeToolTip": "MainMenu.cs",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAAA4AAABHAAAAAAAAAA==",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAA0AAAAJAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
               "WhenOpened": "2026-05-28T08:56:42.71Z",
               "EditorCaption": ""
             },
             {
               "$type": "Document",
-              "DocumentIndex": 7,
+              "DocumentIndex": 8,
               "Title": "Main.cs",
               "DocumentMoniker": "D:\\godot_program\\turn-based-combat\\Main.cs",
               "RelativeDocumentMoniker": "Main.cs",
@@ -97,7 +116,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 1,
+              "DocumentIndex": 4,
               "Title": "ParticleEffectManager.cs",
               "DocumentMoniker": "D:\\godot_program\\turn-based-combat\\effects\\ParticleEffectManager.cs",
               "RelativeDocumentMoniker": "effects\\ParticleEffectManager.cs",
@@ -109,7 +128,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 6,
+              "DocumentIndex": 7,
               "Title": "SkillTooltip.cs",
               "DocumentMoniker": "D:\\godot_program\\turn-based-combat\\SkillTooltip.cs",
               "RelativeDocumentMoniker": "SkillTooltip.cs",
@@ -121,7 +140,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 5,
+              "DocumentIndex": 6,
               "Title": "Player.cs",
               "DocumentMoniker": "D:\\godot_program\\turn-based-combat\\Player.cs",
               "RelativeDocumentMoniker": "Player.cs",
@@ -133,7 +152,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 4,
+              "DocumentIndex": 5,
               "Title": "Enemy.cs",
               "DocumentMoniker": "D:\\godot_program\\turn-based-combat\\Enemy.cs",
               "RelativeDocumentMoniker": "Enemy.cs",

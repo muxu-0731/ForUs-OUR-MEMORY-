@@ -23,8 +23,6 @@ font_size = 27
 shadow_size = 4
 shadow_color = Color(0.17567867, 0.17567867, 0, 1)
 
-[sub_resource type="LabelSettings" id="LabelSettings_1kcj2"]
-
 [node name="SkillTooltip" type="PanelContainer" unique_id=1739955645]
 offset_left = 133.0
 offset_top = 124.0
@@ -53,7 +51,7 @@ theme_override_font_sizes/font_size = 16
 label_settings = SubResource("LabelSettings_thc64")
 size_flags_horizontal = 3
 custom_minimum_size = Vector2(320, 0)
-autowrap_mode = 2
+autowrap_mode = 3
 max_lines_visible = 2
 uppercase = true
 
@@ -61,7 +59,6 @@ uppercase = true
 custom_minimum_size = Vector2(320, 320)
 layout_mode = 2
 theme_override_fonts/font = ExtResource("2_6s51n")
-label_settings = SubResource("LabelSettings_1kcj2")
 size_flags_horizontal = 3
-autowrap_mode = 2
+autowrap_mode = 3
 max_lines_visible = 8

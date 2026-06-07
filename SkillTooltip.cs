@@ -20,8 +20,8 @@ public partial class SkillTooltip : PanelContainer
         _descLabel = GetNode<Label>("MarginContainer/Content/DescLabel");
 
         // Godot 4 正确的自动换行写法
-        _titleLabel.AutowrapMode = TextServer.AutowrapMode.Word;
-        _descLabel.AutowrapMode = TextServer.AutowrapMode.Word;
+        _titleLabel.AutowrapMode = TextServer.AutowrapMode.WordSmart;
+        _descLabel.AutowrapMode = TextServer.AutowrapMode.WordSmart;
 
         // 固定最大宽度，强制文字按宽度换行
         _titleLabel.CustomMinimumSize = new Vector2(MaxTooltipWidth - 20, 0);
