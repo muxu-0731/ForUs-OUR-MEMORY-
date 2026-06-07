@@ -203,6 +203,8 @@ public partial class GlobalScript : Node
     }
     public List<EnemyData> AllEnemies = new List<EnemyData>();
     public int CurrentEnemyIndex = 0;
+    private TurnIndicatorEffect _currentTurnIndicator;
+    private ulong _turnIndicatorRequestId = 0;
 
     // 单例初始化
     public override void _Ready()
@@ -354,6 +356,7 @@ public partial class GlobalScript : Node
         CurrentState = BattleState.Waiting;
         CurrentActingUnitIndex = 0;
         CurrentActingUnit = null;
+        UpdateTurnIndicator(null);
         StartPlayerTurn();
     }
 
@@ -527,7 +530,7 @@ public partial class GlobalScript : Node
 
     #region 战斗核心通用方法
     // ✅ 核心修改：受伤方法（修复防御减免bug + 锐评增伤）
-    public void TakeDamage(BattleUnit target, float damage, bool isFriendlyBurnSoul = false)
+    public void TakeDamage(BattleUnit target, float damage, bool isFriendlyBurnSoul = false, bool isCrit = false)
     {
         if (target.IsDead) return;
 
@@ -568,6 +571,12 @@ public partial class GlobalScript : Node
         }
 
         target.Hp = newHp;
+
+        if (finalDamage > 0f && DamagePopfxManager.Instance != null && target.BindNode != null)
+        {
+            Vector2 popfxPosition = target.BindNode.GlobalPosition;
+            DamagePopfxManager.Instance.SpawnDamageText(Mathf.RoundToInt(finalDamage), isCrit, popfxPosition);
+        }
 
         // 熟客印记回复（目标有印记时，扣血后回复5%外卖猫最大生命值）
         if (target.HasRegularCustomerMark)
@@ -617,11 +626,20 @@ public partial class GlobalScript : Node
             return;
         }
 
+        healValue = Mathf.Max(0f, healValue);
+
         // 记录治疗前的生命值比例
         float beforeHpPercent = target.Hp / target.HpMax;
 
         // 结算治疗
         target.Hp = Mathf.Min(target.HpMax, target.Hp + healValue);
+
+        int countedHeal = Mathf.RoundToInt(healValue);
+        if (countedHeal > 0 && DamagePopfxManager.Instance != null && target.BindNode != null)
+        {
+            Vector2 popfxPosition = target.BindNode.GlobalPosition;
+            DamagePopfxManager.Instance.SpawnHealText(countedHeal, popfxPosition);
+        }
 
         // 触发邪恶兔被动
         if (target.IsPlayerUnit && target.UnitName == "邪恶兔")
@@ -772,9 +790,9 @@ public partial class GlobalScript : Node
     }
 
     // 小鸡默契攻击（不占回合）
-    public void TriggerCoopAttack(BattleUnit target)
+    public System.Threading.Tasks.Task TriggerCoopAttack(BattleUnit target)
     {
-        SynergyGlobalManager.TriggerOnAllyAttackHit(this, CurrentActingUnit, target);
+        return SynergyGlobalManager.TriggerOnAllyAttackHit(this, CurrentActingUnit, target);
     }
 
     // 向死而生被动逻辑：新增暴击率/暴击伤害上限
@@ -811,10 +829,34 @@ public partial class GlobalScript : Node
         // 首次添加印记：增加最大生命值
         if (!target.HasRegularCustomerMark)
         {
+            float beforeHpPercent = target.Hp / target.HpMax;
             target.ExtraMaxHpFromMark = extraMaxHp;
             target.HpMax += extraMaxHp;
             // 同步当前血量（避免最大生命值增加后血量比例异常）
             target.Hp = Mathf.Min(target.Hp + extraMaxHp, target.HpMax);
+
+            if (extraMaxHp > 0f && DamagePopfxManager.Instance != null && target.BindNode != null)
+            {
+                Vector2 popfxPosition = target.BindNode.GlobalPosition;
+                DamagePopfxManager.Instance.SpawnHealText(Mathf.RoundToInt(extraMaxHp), popfxPosition);
+            }
+
+            if (target.IsPlayerUnit && target.UnitName == "邪恶兔")
+            {
+                TriggerDeadLivePassive(target, beforeHpPercent, target.Hp / target.HpMax);
+            }
+
+            if (target.IsPlayerUnit)
+            {
+                var playerNode = target.BindNode as Player;
+                playerNode?.UpdateHp();
+            }
+            else
+            {
+                var enemyNode = target.BindNode as Enemy;
+                enemyNode?.UpdateHp();
+            }
+
             GD.Print($"【熟客印记】{target.UnitName}获得{extraMaxHp:0}点额外最大生命值，当前最大生命值：{target.HpMax:0}");
         }
 
@@ -855,6 +897,7 @@ public partial class GlobalScript : Node
         if (allPlayerDead)
         {
             CurrentState = BattleState.BattleEnd;
+            UpdateTurnIndicator(null);
             return true;
         }
 
@@ -868,11 +911,78 @@ public partial class GlobalScript : Node
             else
             {
                 CurrentState = BattleState.BattleEnd;
+                UpdateTurnIndicator(null);
                 return true;
             }
         }
 
         return false;
+    }
+
+    private async void UpdateTurnIndicator(Node2D currentCharacter)
+    {
+        _turnIndicatorRequestId++;
+        ulong requestId = _turnIndicatorRequestId;
+
+        if (GodotObject.IsInstanceValid(_currentTurnIndicator))
+        {
+            _currentTurnIndicator.QueueFree();
+            _currentTurnIndicator = null;
+        }
+
+        if (!GodotObject.IsInstanceValid(currentCharacter) || !currentCharacter.IsInsideTree())
+        {
+            return;
+        }
+
+        await ToSignal(GetTree(), SceneTree.SignalName.ProcessFrame);
+
+        if (requestId != _turnIndicatorRequestId)
+        {
+            return;
+        }
+
+        if (!GodotObject.IsInstanceValid(currentCharacter) || !currentCharacter.IsInsideTree())
+        {
+            return;
+        }
+
+        Node parentNode = currentCharacter.GetParent();
+        if (!GodotObject.IsInstanceValid(parentNode) || !parentNode.IsInsideTree())
+        {
+            return;
+        }
+
+        var indicator = new TurnIndicatorEffect();
+        indicator.Configure(CalculateTurnIndicatorRadius(currentCharacter));
+        parentNode.AddChild(indicator);
+        indicator.GlobalPosition = currentCharacter.GlobalPosition + new Vector2(0, 15f);
+        _currentTurnIndicator = indicator;
+    }
+
+    private float CalculateTurnIndicatorRadius(Node2D currentCharacter)
+    {
+        if (currentCharacter is Sprite2D sprite && sprite.Texture != null)
+        {
+            Vector2 textureSize = sprite.Texture.GetSize();
+            Vector2 scale = sprite.GlobalScale.Abs();
+            float width = textureSize.X * scale.X;
+            float height = textureSize.Y * scale.Y;
+            return Mathf.Max(width, height) * 0.6f;
+        }
+
+        return 80f;
+    }
+
+    public void RefreshCurrentTurnIndicator()
+    {
+        if (CurrentState == BattleState.BattleEnd || CurrentActingUnit == null || CurrentActingUnit.IsDead)
+        {
+            UpdateTurnIndicator(null);
+            return;
+        }
+
+        UpdateTurnIndicator(CurrentActingUnit.BindNode);
     }
 
     // 回合结束状态处理（新增小鸡Debuff回合管理）
@@ -1018,6 +1128,7 @@ public partial class GlobalScript : Node
                 }
 
                 CurrentActingUnit = unit;
+                UpdateTurnIndicator(unit.BindNode);
                 Ui.Instance?.OnSinglePlayerTurnStart(unit);
                 return;
             }
@@ -1025,6 +1136,7 @@ public partial class GlobalScript : Node
         }
 
         // 所有玩家行动完，进入敌人回合
+        UpdateTurnIndicator(null);
         StartEnemyTurn();
     }
 
@@ -1064,6 +1176,7 @@ public partial class GlobalScript : Node
                 }
 
                 CurrentActingUnit = unit;
+                UpdateTurnIndicator(unit.BindNode);
                 Ui.Instance?.StartEnemyAI(unit);
                 return;
             }
@@ -1076,6 +1189,7 @@ public partial class GlobalScript : Node
         }
 
         // 所有敌人行动完，回到玩家回合
+        UpdateTurnIndicator(null);
         OnRoundEndProcessStatus();
         StartPlayerTurn();
     }

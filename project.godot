@@ -17,7 +17,8 @@ config/icon="res://icon.svg"
 
 [autoload]
 
-GlobalScript="*uid://c71shdot7l3uj"
+GlobalScript="*res://GlobalScript.cs"
+DamagePopfxManager="*res://DamagePopfxManager.cs"
 
 [display]
 

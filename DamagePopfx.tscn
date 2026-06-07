@@ -1,0 +1,15 @@
+[gd_scene format=3 uid="uid://mc87he7e53b1"]
+
+[ext_resource type="Script" uid="uid://cau6a8lycvpth" path="res://DamagePopfx.cs" id="1_rwxb3"]
+[ext_resource type="FontFile" uid="uid://bkr0q2c4q73gc" path="res://Font/m5x7.ttf" id="2_igfh7"]
+
+[node name="DamagePopfx" type="Node2D" unique_id=272288006]
+script = ExtResource("1_rwxb3")
+
+[node name="DamageLabel" type="Label" parent="." unique_id=1088111960]
+texture_filter = 1
+offset_right = 40.0
+offset_bottom = 17.0
+theme_override_fonts/font = ExtResource("2_igfh7")
+theme_override_font_sizes/font_size = 70
+text = "111"

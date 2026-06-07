@@ -48,19 +48,16 @@ texture = ExtResource("1_0xm2m")
 [node name="ui" parent="CanvasLayer" unique_id=94057453 instance=ExtResource("2_1bvp3")]
 
 [node name="player_takeaway" parent="." unique_id=1579825371 instance=ExtResource("2_h2yge")]
-position = Vector2(243, 399)
+position = Vector2(165, 399)
 rotation = -0.0022321607
-scale = Vector2(3.417048, 3.9185)
 texture = ExtResource("5_5vw27")
 
 [node name="player_chicken" parent="." unique_id=1670085131 instance=ExtResource("2_h2yge")]
 position = Vector2(339.00003, 539.00006)
-scale = Vector2(3.0888388, 3.542127)
 _playerTeamIndex = 1
 
 [node name="player_rabbit" parent="." unique_id=1087659926 instance=ExtResource("2_h2yge")]
 position = Vector2(555, 454)
-scale = Vector2(3.417048, 3.9185)
 texture = ExtResource("6_kek77")
 _playerTeamIndex = 2
 

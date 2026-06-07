@@ -4,8 +4,6 @@ public partial class Player : Sprite2D
 {
     [Export] private int _playerTeamIndex = 0;
 
-    private const float OversizedTextureThreshold = 128f;
-    private const float NormalizedDisplaySize = 16f;
     private const int SpriteZIndex = 1;
     private const int HpBarZIndex = 2;
     private const float FixedHpBarWidth = 180f;
@@ -128,7 +126,6 @@ public partial class Player : Sprite2D
 
     public void UpdateHp()
     {
-        // 兼容现有调用
     }
 
     private void BindUnitData()
@@ -155,6 +152,7 @@ public partial class Player : Sprite2D
             }
         }
 
+        global.RefreshCurrentTurnIndicator();
         GD.Print($"玩家【{_bindUnit.UnitName}】数据绑定完成，队伍索引：{_playerTeamIndex}");
     }
 
@@ -174,16 +172,6 @@ public partial class Player : Sprite2D
         }
 
         Scale = _baseScale;
-
-        float maxDimension = Mathf.Max(textureSize.X, textureSize.Y);
-        if (maxDimension <= OversizedTextureThreshold)
-        {
-            return;
-        }
-
-        float normalizeRatio = NormalizedDisplaySize / maxDimension;
-        Scale = _baseScale * normalizeRatio;
-        GD.Print($"玩家【{_bindUnit?.UnitName}】使用超大贴图归一化显示：原尺寸 {textureSize}，缩放倍率={normalizeRatio:0.0000}");
     }
 
     private void UpdateHpBarPosition()
@@ -196,7 +184,6 @@ public partial class Player : Sprite2D
         Vector2 safeScale = GetSafeAbsScale();
         Vector2 textureSize = Texture.GetSize();
 
-        // 血条固定为 120x15，始终挂在角色贴图顶部正上方 10px。
         _hpBarRoot.Scale = new Vector2(1f / safeScale.X, 1f / safeScale.Y);
         _hpBarRoot.Position = new Vector2(
             -FixedHpBarWidth * 0.5f / safeScale.X,

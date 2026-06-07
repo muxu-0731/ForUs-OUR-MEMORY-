@@ -1,5 +1,6 @@
 using Godot;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 
 public static class SynergyGlobalManager
 {
@@ -10,7 +11,7 @@ public static class SynergyGlobalManager
         return new SynergyAttack
         {
             StatusId = ChickenSynergyAttackId,
-            StatusName = "默契攻击",
+            StatusName = "游戏锐评官",
             DamageMultiplier = 0.02f,
             DotStacksOnHit = 1,
             EnergyGainOnTrigger = 5,
@@ -32,7 +33,7 @@ public static class SynergyGlobalManager
         GD.Print($"【默契攻击注册】{owner.UnitName} 注册词条：{synergyAttack.StatusName}");
     }
 
-    public static async void TriggerOnAllyAttackHit(GlobalScript global, GlobalScript.BattleUnit attacker, GlobalScript.BattleUnit target)
+    public static async Task TriggerOnAllyAttackHit(GlobalScript global, GlobalScript.BattleUnit attacker, GlobalScript.BattleUnit target)
     {
         if (global == null || attacker == null || target == null || target.IsDead)
         {
@@ -64,14 +65,19 @@ public static class SynergyGlobalManager
         }
     }
 
-    private static async System.Threading.Tasks.Task TriggerSingleSynergyAttack(GlobalScript global, GlobalScript.BattleUnit owner, SynergyAttack synergyAttack, GlobalScript.BattleUnit target)
+    private static async Task TriggerSingleSynergyAttack(
+        GlobalScript global,
+        GlobalScript.BattleUnit owner,
+        SynergyAttack synergyAttack,
+        GlobalScript.BattleUnit target)
     {
         if (global == null || owner == null || synergyAttack == null || target == null || target.IsDead)
         {
             return;
         }
 
-        await global.ToSignal(global.GetTree().CreateTimer(0.15f), "timeout");
+        await global.ToSignal(global.GetTree().CreateTimer(1.0f), SceneTreeTimer.SignalName.Timeout);
+        Ui.Instance?.BroadcastSkillName(synergyAttack.StatusName, true);
 
         float baseDamage = owner.HpMax * synergyAttack.DamageMultiplier;
         float finalDamage = baseDamage;
@@ -90,7 +96,7 @@ public static class SynergyGlobalManager
             finalDamage /= 2f;
         }
 
-        global.TakeDamage(target, finalDamage);
+        global.TakeDamage(target, finalDamage, isCrit: isCrit);
 
         if (synergyAttack.DotStacksOnHit > 0)
         {
@@ -102,16 +108,7 @@ public static class SynergyGlobalManager
             global.AddEnergy(owner, synergyAttack.EnergyGainOnTrigger, synergyAttack.StatusName);
         }
 
-        if (Ui.Instance != null)
-        {
-            string tip = $"🐔 {owner.UnitName}【{synergyAttack.StatusName}】！\n对 {target.UnitName} 造成 {finalDamage:0.0} 点伤害！";
-            if (isCrit)
-            {
-                tip = "💥 暴击！！" + tip;
-            }
-            Ui.Instance.SetBattleTip(tip);
-        }
-
         global.CheckBattleEnd();
+        await global.ToSignal(global.GetTree().CreateTimer(1.0f), SceneTreeTimer.SignalName.Timeout);
     }
 }

@@ -17,6 +17,9 @@ public partial class Ui : Control
     private Label _battleTipLabel;
     private Label _remainEnemyLabel;
     private Label _attrLabel;
+    private PanelContainer _skillNotifier;
+    private Label _notifierLabel;
+    private Tween _notifierTween;
 
 
     private readonly PackedScene _skillTooltipScene = GD.Load<PackedScene>("res://skill_tooltip.tscn");
@@ -44,6 +47,8 @@ public partial class Ui : Control
         _battleTipLabel = GetNodeOrNull<Label>("Label");
         _remainEnemyLabel = GetNodeOrNull<Label>("enemynumber");
         _attrLabel = GetNodeOrNull<Label>("playershuxing");
+        _skillNotifier = GetNodeOrNull<PanelContainer>("SkillNotifier");
+        _notifierLabel = GetNodeOrNull<Label>("SkillNotifier/NotifierLabel");
 
 
         // 实例化自定义提示框
@@ -82,6 +87,16 @@ public partial class Ui : Control
         // 初始状态（原有逻辑，移除旧Label相关）
         if (_skillsContainer != null) _skillsContainer.Visible = false;
         if (_attrLabel != null) _attrLabel.Visible = false;
+        if (_battleTipLabel != null)
+        {
+            _battleTipLabel.Visible = false;
+            _battleTipLabel.Text = string.Empty;
+        }
+        if (_skillNotifier != null)
+        {
+            _skillNotifier.Visible = false;
+            _skillNotifier.Modulate = new Color(1f, 1f, 1f, 0f);
+        }
 
         // 延迟初始化检查
         GetTree().CreateTimer(0.1f).Timeout += () =>
@@ -169,6 +184,36 @@ public partial class Ui : Control
     }
 
     // 新敌人登场时调用（原有不变）
+    public void BroadcastSkillName(string skillName, bool isPlayerTurn)
+    {
+        if (_skillNotifier == null || _notifierLabel == null || string.IsNullOrWhiteSpace(skillName))
+        {
+            return;
+        }
+
+        if (GodotObject.IsInstanceValid(_notifierTween))
+        {
+            _notifierTween.Kill();
+        }
+
+        _notifierLabel.Text = skillName;
+        _notifierLabel.Modulate = isPlayerTurn ? Colors.White : new Color(1f, 0.25f, 0.25f);
+        _skillNotifier.Visible = true;
+        _skillNotifier.Modulate = new Color(1f, 1f, 1f, 0f);
+
+        _notifierTween = CreateTween();
+        _notifierTween.TweenProperty(_skillNotifier, "modulate:a", 1f, 0.2f);
+        _notifierTween.TweenInterval(3.0f);
+        _notifierTween.TweenProperty(_skillNotifier, "modulate:a", 0f, 0.3f);
+        _notifierTween.TweenCallback(Callable.From(() =>
+        {
+            if (_skillNotifier != null)
+            {
+                _skillNotifier.Visible = false;
+            }
+        }));
+    }
+
     public void OnNewEnemySpawned(GlobalScript.BattleUnit newEnemy)
     {
         var enemyNode = GetTree().Root.GetNodeOrNull<Enemy>("Main/enemy");
@@ -203,7 +248,11 @@ public partial class Ui : Control
     // ✅ 新增：供全局调用的设置提示方法
     public void SetBattleTip(string text)
     {
-        if (_battleTipLabel != null) _battleTipLabel.Text = text;
+        if (_battleTipLabel != null)
+        {
+            _battleTipLabel.Visible = false;
+            _battleTipLabel.Text = string.Empty;
+        }
     }
     #endregion
 
@@ -221,6 +270,7 @@ public partial class Ui : Control
 
         _currentPlayerHasActed = true;
         if (_skillsContainer != null) _skillsContainer.Visible = false;
+        BroadcastSkillName(_currentNormal.SkillName, true);
 
         var caster = global.CurrentActingUnit;
         var enemies = global.GetAliveEnemies();
@@ -261,7 +311,7 @@ public partial class Ui : Control
             GD.Print($"敌人硬化生效，伤害减半，最终伤害：{finalDamage:0.0}");
         }
 
-        global.TakeDamage(target, finalDamage);
+        global.TakeDamage(target, finalDamage, isCrit: isCrit);
         global.ApplySkillEnergy(caster, _currentNormal);
         global.GainFocus(1);
 
@@ -284,7 +334,7 @@ public partial class Ui : Control
         // ✅ 新增：非小鸡角色攻击后，触发小鸡默契攻击
         if (caster.UnitName != "小鸡")
         {
-            global.TriggerCoopAttack(target);
+            await global.TriggerCoopAttack(target);
         }
 
         CheckBattleAndContinue(global);
@@ -306,6 +356,7 @@ public partial class Ui : Control
 
         _currentPlayerHasActed = true;
         if (_skillsContainer != null) _skillsContainer.Visible = false;
+        BroadcastSkillName(_currentSpecial.SkillName, true);
 
         var caster = global.CurrentActingUnit;
         var alivePlayers = global.GetAlivePlayers();
@@ -331,7 +382,7 @@ public partial class Ui : Control
             if (_battleTipLabel != null) _battleTipLabel.Text = tip;
 
             // ✅ 外卖猫放完技能，触发小鸡默契攻击
-            if (enemies.Count > 0) global.TriggerCoopAttack(enemies[0]);
+            if (enemies.Count > 0) await global.TriggerCoopAttack(enemies[0]);
         }
         // ✅ 邪恶兔燃魂逻辑（直接用开头的enemies，不再重复声明）
         else if (caster.UnitName == "邪恶兔")
@@ -406,7 +457,7 @@ public partial class Ui : Control
                 GD.PushWarning("⚠️ 燃魂命中特效播放失败：特效管理器未初始化或目标节点不存在");
             }
 
-            global.TakeDamage(target, finalDamage);
+            global.TakeDamage(target, finalDamage, isCrit: isCrit);
             skillExecuted = true;
 
             tip = costTip;
@@ -417,7 +468,7 @@ public partial class Ui : Control
             if (_battleTipLabel != null) _battleTipLabel.Text = tip;
 
             // ✅ 邪恶兔放完技能，触发小鸡默契攻击
-            global.TriggerCoopAttack(target);
+            await global.TriggerCoopAttack(target);
         }
         // ✅ 小鸡特殊技能逻辑
         else if (caster.UnitName == "小鸡")
@@ -447,7 +498,7 @@ public partial class Ui : Control
 
             if (target.Hardened) finalDamage /= 2;
 
-            global.TakeDamage(target, finalDamage);
+            global.TakeDamage(target, finalDamage, isCrit: isCrit);
             skillExecuted = true;
 
             // 额外2层锐评 + 禁疗3回合
@@ -488,7 +539,7 @@ public partial class Ui : Control
 
             if (target.Hardened) finalDamage /= 2;
 
-            global.TakeDamage(target, finalDamage);
+            global.TakeDamage(target, finalDamage, isCrit: isCrit);
             global.ApplyAppleQueenGuHen(caster, target);
             DotGlobalManager.SpreadDots(global, target, global.GetAdjacentEnemies(target));
             skillExecuted = true;
@@ -500,7 +551,7 @@ public partial class Ui : Control
             if (isCrit) tip = "💥 暴击！！" + tip;
             if (_battleTipLabel != null) _battleTipLabel.Text = tip;
 
-            global.TriggerCoopAttack(target);
+            await global.TriggerCoopAttack(target);
         }
         else
         {
@@ -534,6 +585,7 @@ public partial class Ui : Control
 
         _currentPlayerHasActed = true;
         if (_skillsContainer != null) _skillsContainer.Visible = false;
+        BroadcastSkillName(_currentUltimate.SkillName, true);
 
         var alivePlayers = global.GetAlivePlayers();
         var enemies = global.GetAliveEnemies();
@@ -565,12 +617,14 @@ public partial class Ui : Control
                 var target = enemies[0];
                 float damage = totalHeal * 0.5f;
                 float finalDamage = damage;
+                bool isCrit = false;
 
                 // 暴击判定
                 float finalCritRate = caster.GetFinalCritRate();
                 float randomValue = (float)GlobalScript.GlobalRandom.NextDouble();
                 if (randomValue <= finalCritRate)
                 {
+                    isCrit = true;
                     finalDamage *= caster.GetFinalCritDamage();
                     tip += "💥 暴击！！";
                 }
@@ -581,11 +635,11 @@ public partial class Ui : Control
                     tip += $"敌人{target.UnitName}硬化生效，伤害减半！\n";
                 }
 
-                global.TakeDamage(target, finalDamage);
+                global.TakeDamage(target, finalDamage, isCrit: isCrit);
                 tip += $"对{target.UnitName}造成{finalDamage:0.0}点伤害（50%总回复量）！";
 
                 // ✅ 外卖猫放完大招，触发小鸡默契攻击
-                global.TriggerCoopAttack(target);
+                await global.TriggerCoopAttack(target);
             }
 
             global.ApplySkillEnergy(caster, _currentUltimate);
@@ -648,7 +702,7 @@ public partial class Ui : Control
 
             // ✅ 特效完全播完后，再结算伤害
             GD.Print("血魇特效播放完成，开始结算伤害");
-            global.TakeDamage(target, finalDamage);
+            global.TakeDamage(target, finalDamage, isCrit: isCrit);
 
             // 3. 伤害结算后，再执行吸血
             await ToSignal(GetTree().CreateTimer(0.2f), "timeout");
@@ -665,7 +719,7 @@ public partial class Ui : Control
             if (_battleTipLabel != null) _battleTipLabel.Text = tip;
 
             // ✅ 邪恶兔放完大招，触发小鸡默契攻击
-            global.TriggerCoopAttack(target);
+            await global.TriggerCoopAttack(target);
 
             global.ApplySkillEnergy(caster, _currentUltimate);
 
@@ -700,7 +754,7 @@ public partial class Ui : Control
 
             if (target.Hardened) finalDamage /= 2;
 
-            global.TakeDamage(target, finalDamage);
+            global.TakeDamage(target, finalDamage, isCrit: isCrit);
 
             // 立即10层锐评 + 降低60%防御3回合
             global.ApplyReview(caster, target, 10);
@@ -746,7 +800,7 @@ public partial class Ui : Control
                     finalDamage /= 2f;
                 }
 
-                global.TakeDamage(enemy, finalDamage);
+                global.TakeDamage(enemy, finalDamage, isCrit: isCrit);
                 global.ApplyAppleQueenGuHen(caster, enemy);
                 tip += $"{enemy.UnitName}受到{finalDamage:0.0}点伤害并被施加【锢痕】！\n";
                 if (isCrit)
@@ -757,7 +811,7 @@ public partial class Ui : Control
 
             DotGlobalManager.ExplodeDots(global, enemies);
             global.ApplySkillEnergy(caster, _currentUltimate);
-            global.TriggerCoopAttack(enemies[0]);
+            await global.TriggerCoopAttack(enemies[0]);
 
             tip += "场上所有敌人的持续伤害已被引爆！";
             if (_battleTipLabel != null) _battleTipLabel.Text = tip;
@@ -781,7 +835,7 @@ public partial class Ui : Control
 
         if (_battleTipLabel != null)
             _battleTipLabel.Text = $"{enemy.UnitName}的回合...";
-        await ToSignal(GetTree().CreateTimer(1f), "timeout");
+        await ToSignal(GetTree().CreateTimer(1.0f), "timeout");
 
         var alivePlayers = global.GetAlivePlayers();
         if (alivePlayers.Count == 0)
@@ -803,7 +857,7 @@ public partial class Ui : Control
             global.TakeDamage(enemy, abyssDmg);
             if (_battleTipLabel != null)
                 _battleTipLabel.Text = $"渊噬对{enemy.UnitName}造成了{abyssDmg}点伤害！";
-            await ToSignal(GetTree().CreateTimer(0.8f), "timeout");
+            await ToSignal(GetTree().CreateTimer(1.0f), "timeout");
 
             if (enemy.IsDead)
             {
@@ -816,29 +870,33 @@ public partial class Ui : Control
         switch (randomSkill)
         {
             case 0:
+                BroadcastSkillName("普通攻击", false);
                 global.TakeDamage(target, enemy.Attack * 1f);
                 if (_battleTipLabel != null)
                     _battleTipLabel.Text = $"{enemy.UnitName}发动普通攻击！";
                 break;
             case 1:
+                BroadcastSkillName("重击", false);
                 global.TakeDamage(target, enemy.Attack * 1.6f);
                 if (_battleTipLabel != null)
                     _battleTipLabel.Text = $"{enemy.UnitName}发动重击！";
                 break;
             case 2:
+                BroadcastSkillName("硬化", false);
                 enemy.Hardened = true;
                 enemy.HardenedTurns = 2;
                 if (_battleTipLabel != null)
                     _battleTipLabel.Text = $"{enemy.UnitName}开启硬化皮肤，受到的伤害减半！";
                 break;
             case 3:
+                BroadcastSkillName("自我愈合", false);
                 global.Heal(enemy, enemy.HpMax * 0.1f);
                 if (_battleTipLabel != null)
                     _battleTipLabel.Text = $"{enemy.UnitName}使用自我愈合，恢复了生命值！";
                 break;
         }
 
-        await ToSignal(GetTree().CreateTimer(1f), "timeout");
+        await ToSignal(GetTree().CreateTimer(1.0f), "timeout");
 
         if (global.CheckBattleEnd())
         {
@@ -871,7 +929,7 @@ public partial class Ui : Control
 
     private void EndCurrentPlayerAction(GlobalScript global)
     {
-        GetTree().CreateTimer(0.8f).Timeout += () =>
+        GetTree().CreateTimer(1.0f).Timeout += () =>
         {
             global.OnSinglePlayerActionEnd();
         };
@@ -879,6 +937,15 @@ public partial class Ui : Control
 
     private void OnBattleEnd(GlobalScript global)
     {
+        if (GodotObject.IsInstanceValid(_notifierTween))
+        {
+            _notifierTween.Kill();
+        }
+        if (_skillNotifier != null)
+        {
+            _skillNotifier.Visible = false;
+            _skillNotifier.Modulate = new Color(1f, 1f, 1f, 0f);
+        }
         // 禁用所有按钮
         if (_skillButton != null) _skillButton.Disabled = true;
         if (_normalAttackBtn != null) _normalAttackBtn.Disabled = true;

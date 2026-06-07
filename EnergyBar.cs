@@ -3,7 +3,7 @@ using Godot;
 public partial class EnergyBar : Control
 {
     private const int EnergyBarZIndex = 3;
-    private const float EnergyMargin = 2f;
+    private const float EnergyMargin = 6f;
     private const float BarWidth = 12f;
     private const float BarHeight = 70f;
     private const float TextGap = 6f;
@@ -160,6 +160,6 @@ public partial class EnergyBar : Control
         Scale = new Vector2(1f / safeScale.X, 1f / safeScale.Y);
         Position = new Vector2(
             sprite.Texture.GetSize().X * 0.5f + EnergyMargin / safeScale.X,
-            sprite.Texture.GetSize().Y * 0.5f + EnergyMargin / safeScale.Y);
+            -contentHeight * 0.5f / safeScale.Y);
     }
 }

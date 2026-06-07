@@ -1,6 +1,6 @@
 [gd_scene format=3 uid="uid://b00dsd2w8yru6"]
 
-[ext_resource type="Texture2D" uid="uid://cggifg0v6omxl" path="res://sucaibao/GameAssets/player.png" id="1_4flbx"]
+[ext_resource type="Texture2D" uid="uid://cggifg0v6omxl" path="res://sucaibao - 副本/GameAssets/player.png" id="1_4flbx"]
 [ext_resource type="Script" uid="uid://by2kdbxqrtt81" path="res://Player.cs" id="2_sweqy"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_onrkg"]
@@ -12,7 +12,7 @@ corner_radius_bottom_left = 2
 
 [node name="player" type="Sprite2D" unique_id=1579825371]
 position = Vector2(388, 486.5)
-scale = Vector2(3, 3.4375002)
+scale = Vector2(0.1, 0.114)
 texture = ExtResource("1_4flbx")
 script = ExtResource("2_sweqy")
 
