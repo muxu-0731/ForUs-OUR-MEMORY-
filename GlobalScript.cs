@@ -9,6 +9,7 @@ public partial class GlobalScript : Node
     private const string TakeawayCatJsonPath = "res://character_data/takeaway_cat.json";
     private const string ChickenJsonPath = "res://character_data/chicken.json";
     private const string AppleQueenJsonPath = "res://character_data/apple_queen.json";
+    private const string MiaminJsonPath = "res://character_data/miamin.json";
 
     private static readonly JsonSerializerOptions CharacterJsonOptions = new JsonSerializerOptions
     {
@@ -126,6 +127,9 @@ public partial class GlobalScript : Node
         public int RegularCustomerMarkTurns; // 印记剩余持续回合
         public float ExtraMaxHpFromMark;     // 印记带来的额外最大生命值（外卖猫30%自身最大生命值）
 
+        public bool MiaminFatalProtectionUsed; // 迈阿密被动：每局最多触发一次
+        public bool MiaminNoMeatballState;     // 迈阿密被动：【没丸呢】锁血状态
+
 
         public BattleUnit()
         {
@@ -150,6 +154,8 @@ public partial class GlobalScript : Node
             HealBlockTurns = 0;
             DefenseDownPercent = 0f;
             DefenseDownTurns = 0;
+            MiaminFatalProtectionUsed = false;
+            MiaminNoMeatballState = false;
         }
 
         // 获取最终暴击率（基础+buff，保底0）
@@ -312,7 +318,8 @@ public partial class GlobalScript : Node
             EvilRabbitJsonPath,
             TakeawayCatJsonPath,
             ChickenJsonPath,
-            AppleQueenJsonPath
+            AppleQueenJsonPath,
+            MiaminJsonPath
         };
 
         foreach (string jsonPath in characterJsonPaths)
@@ -410,6 +417,8 @@ public partial class GlobalScript : Node
             unit.ReviewTurns = 0;
             unit.ReviewDotDamage = 0f;
             unit.ReviewCaster = null;
+            unit.MiaminFatalProtectionUsed = false;
+            unit.MiaminNoMeatballState = false;
         }
 
         var chicken = PlayerTeam.Find(unit => unit != null && unit.UnitName == "小鸡");
@@ -433,7 +442,9 @@ public partial class GlobalScript : Node
             Defense = sourceUnit.Defense,
             IsPlayerUnit = sourceUnit.IsPlayerUnit,
             MaxEnergy = Mathf.Max(0, sourceUnit.MaxEnergy),
-            CurrentEnergy = Mathf.Clamp(sourceUnit.CurrentEnergy, 0, Mathf.Max(0, sourceUnit.MaxEnergy))
+            CurrentEnergy = Mathf.Clamp(sourceUnit.CurrentEnergy, 0, Mathf.Max(0, sourceUnit.MaxEnergy)),
+            MiaminFatalProtectionUsed = false,
+            MiaminNoMeatballState = false
         };
 
         foreach (var skill in sourceUnit.Skills)
@@ -530,20 +541,33 @@ public partial class GlobalScript : Node
 
     #region 战斗核心通用方法
     // ✅ 核心修改：受伤方法（修复防御减免bug + 锐评增伤）
-    public void TakeDamage(BattleUnit target, float damage, bool isFriendlyBurnSoul = false, bool isCrit = false)
+    public void TakeDamage(BattleUnit target, float damage, bool isFriendlyBurnSoul = false, bool isCrit = false, BattleUnit sourceUnit = null, bool isDotDamage = false)
     {
         if (target.IsDead) return;
 
         // 记录受伤前的生命值比例
         float beforeHpPercent = target.Hp / target.HpMax;
 
-        // 1. 全局持续伤害增伤（如小鸡锐评）
+        // 1. 全局易伤。DOT 也可以吃目标自己身上的通用易伤，但不吃施法者侧因素。
         float damageAfterReview = damage;
-        float dotDamageBonus = DotGlobalManager.GetDamageTakenBonus(target);
-        if (dotDamageBonus > 0f)
+        float damageTakenBonus = DotGlobalManager.GetDamageTakenBonus(target);
+        if (damageTakenBonus > 0f)
         {
-            damageAfterReview = damage * (1 + dotDamageBonus);
-            GD.Print($"【持续伤害增伤】{target.UnitName} 当前增伤{dotDamageBonus:P0}，原始伤害:{damage:0.0} → 增伤后:{damageAfterReview:0.0}");
+            damageAfterReview = damage * (1 + damageTakenBonus);
+            GD.Print($"【伤害易伤】{target.UnitName} 当前易伤{damageTakenBonus:P0}，原始伤害:{damage:0.0} → 易伤后:{damageAfterReview:0.0}");
+        }
+
+        if (!isDotDamage && target.IsPlayerUnit && target.UnitName == "迈阿密" && sourceUnit != null && !sourceUnit.IsPlayerUnit)
+        {
+            var youAreDone = DotGlobalManager.GetDot(sourceUnit, DotGlobalManager.MiaminYouAreDoneStatusId);
+            int stacks = Mathf.Clamp(youAreDone?.StackCount ?? 0, 0, 3);
+            if (stacks > 0)
+            {
+                float reduction = Mathf.Clamp(stacks * 0.2f, 0f, 0.95f);
+                float beforeReduction = damageAfterReview;
+                damageAfterReview *= 1f - reduction;
+                GD.Print($"【你丸了】{sourceUnit.UnitName} 对迈阿密造成的伤害降低{reduction:P0}，{beforeReduction:0.0} → {damageAfterReview:0.0}");
+            }
         }
 
         // 2. 防御减免（修复：使用防御后的伤害计算）
@@ -555,7 +579,7 @@ public partial class GlobalScript : Node
             GD.Print($"【防御减免】{target.UnitName} 减免{(reduction * 100):0.00}%，原始伤害：{damageAfterReview:0.0} → 防御后：{damageAfterDefense:0.0}");
         }
 
-        // 3. 硬化减伤
+        // 3. 硬化减伤。DOT 是否被减伤，取决于目标自己身上的效果，因此这里统一按目标状态结算。
         float finalDamage = target.Hardened ? damageAfterDefense / 2 : damageAfterDefense;
         float newHp = target.Hp - finalDamage;
 
@@ -568,6 +592,22 @@ public partial class GlobalScript : Node
         else
         {
             newHp = Mathf.Max(0f, newHp);
+        }
+
+        if (target.IsPlayerUnit && target.UnitName == "迈阿密")
+        {
+            if (target.MiaminNoMeatballState && newHp <= 0f)
+            {
+                newHp = 1f;
+                GD.Print("【没丸呢】迈阿密处于锁血状态，生命值保持为1点");
+            }
+            else if (newHp <= 0f && !target.MiaminFatalProtectionUsed)
+            {
+                target.MiaminFatalProtectionUsed = true;
+                target.MiaminNoMeatballState = true;
+                newHp = 1f;
+                GD.Print("【玩丸了？】迈阿密受到致命伤害，进入【没丸呢】状态并锁定生命值为1点");
+            }
         }
 
         target.Hp = newHp;
@@ -647,6 +687,7 @@ public partial class GlobalScript : Node
             TriggerDeadLivePassive(target, beforeHpPercent, target.Hp / target.HpMax);
         }
 
+        RefreshUnitHpDisplay(target);
         GD.Print($"{target.UnitName} 回复了 {healValue:0.0} 点血量");
     }
 
@@ -752,6 +793,91 @@ public partial class GlobalScript : Node
         }
 
         DotGlobalManager.ApplyDot(target, DotGlobalManager.CreateGuHenDot(caster));
+    }
+
+    public void ApplyMiaminYouAreDone(BattleUnit caster, BattleUnit target, int stacks = 1)
+    {
+        if (caster == null || target == null || target.IsDead)
+        {
+            return;
+        }
+
+        DotGlobalManager.ApplyDot(target, DotGlobalManager.CreateMiaminYouAreDoneDot(caster, stacks));
+    }
+
+    public void ApplyMiaminSelfDoubt(BattleUnit caster, BattleUnit target)
+    {
+        if (caster == null || target == null || target.IsDead)
+        {
+            return;
+        }
+
+        DotGlobalManager.ApplyDot(target, DotGlobalManager.CreateMiaminSelfDoubtStatus(caster));
+    }
+
+    public BattleUnit GetAliveMiamin()
+    {
+        return PlayerTeam.Find(unit => unit != null && unit.UnitName == "迈阿密" && !unit.IsDead);
+    }
+
+    public void TriggerMiaminDotHealPassive(BattleUnit dotTarget, float dotDamage)
+    {
+        if (dotTarget == null || dotTarget.IsPlayerUnit || dotDamage <= 0f)
+        {
+            return;
+        }
+
+        var miamin = GetAliveMiamin();
+        if (miamin == null)
+        {
+            return;
+        }
+
+        foreach (var ally in GetAlivePlayers())
+        {
+            Heal(ally, ally.HpMax * 0.01f);
+        }
+
+        GD.Print("【玩丸了？】敌人受到持续伤害，迈阿密使全体队友恢复各自最大生命值的1%");
+    }
+
+    private void ResolveMiaminNoMeatballState(BattleUnit unit)
+    {
+        if (unit == null || unit.UnitName != "迈阿密" || !unit.MiaminNoMeatballState)
+        {
+            return;
+        }
+
+        unit.MiaminNoMeatballState = false;
+        float targetHp = Mathf.Max(1f, unit.HpMax * 0.5f);
+        float healValue = Mathf.Max(0f, targetHp - unit.Hp);
+        if (healValue > 0f)
+        {
+            Heal(unit, healValue);
+        }
+
+        unit.Hp = Mathf.Max(unit.Hp, targetHp);
+        RefreshUnitHpDisplay(unit);
+        GD.Print("【没丸呢】状态结束，迈阿密恢复至最大生命值的50%");
+    }
+
+    private void RefreshUnitHpDisplay(BattleUnit unit)
+    {
+        if (unit == null)
+        {
+            return;
+        }
+
+        if (unit.IsPlayerUnit)
+        {
+            var playerNode = unit.BindNode as Player;
+            playerNode?.UpdateHp();
+        }
+        else
+        {
+            var enemyNode = unit.BindNode as Enemy;
+            enemyNode?.UpdateHp();
+        }
     }
 
     public List<BattleUnit> GetAdjacentEnemies(BattleUnit centerTarget)
@@ -1098,6 +1224,8 @@ public partial class GlobalScript : Node
         unit.ReviewTurns = reviewDot?.RemainingTurns ?? 0;
         unit.ReviewDotDamage = reviewDot == null ? 0f : reviewDot.SnapshotValue * reviewDot.DamageMultiplier;
         unit.ReviewCaster = reviewDot?.SourceUnit;
+
+        ResolveMiaminNoMeatballState(unit);
 
         if (unit.IsDead)
         {

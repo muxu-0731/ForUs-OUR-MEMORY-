@@ -5,6 +5,10 @@ using System.Threading.Tasks;
 public static class SynergyGlobalManager
 {
     public const string ChickenSynergyAttackId = "chicken_coop_attack";
+    private const string ChickenCoopProjectileScenePath = "res://ChickenCoopProjectile.tscn";
+    private const float ProjectileTravelDuration = 0.25f;
+
+    private static readonly PackedScene ChickenCoopProjectileScene = GD.Load<PackedScene>(ChickenCoopProjectileScenePath);
 
     public static SynergyAttack CreateChickenDefaultSynergy()
     {
@@ -59,10 +63,10 @@ public static class SynergyGlobalManager
                     continue;
                 }
 
-                GD.Print($"【默契攻击触发】{owner.UnitName} 触发 {synergyAttack.StatusName}");
-                await TriggerSingleSynergyAttack(global, owner, synergyAttack, target);
-            }
-        }
+        GD.Print($"【默契攻击触发】{owner.UnitName} 触发 {synergyAttack.StatusName}");
+        await TriggerSingleSynergyAttack(global, owner, synergyAttack, target);
+    }
+}
     }
 
     private static async Task TriggerSingleSynergyAttack(
@@ -78,6 +82,8 @@ public static class SynergyGlobalManager
 
         await global.ToSignal(global.GetTree().CreateTimer(1.0f), SceneTreeTimer.SignalName.Timeout);
         Ui.Instance?.BroadcastSkillName(synergyAttack.StatusName, true);
+
+        await PlayChickenCoopProjectile(global, owner, target);
 
         float baseDamage = owner.HpMax * synergyAttack.DamageMultiplier;
         float finalDamage = baseDamage;
@@ -110,5 +116,79 @@ public static class SynergyGlobalManager
 
         global.CheckBattleEnd();
         await global.ToSignal(global.GetTree().CreateTimer(1.0f), SceneTreeTimer.SignalName.Timeout);
+    }
+
+    private static async Task PlayChickenCoopProjectile(
+        GlobalScript global,
+        GlobalScript.BattleUnit owner,
+        GlobalScript.BattleUnit target)
+    {
+        if (global == null || owner?.BindNode == null || target?.BindNode == null)
+        {
+            return;
+        }
+
+        if (ChickenCoopProjectileScene == null)
+        {
+            GD.PrintErr($"默契攻击特效加载失败：{ChickenCoopProjectileScenePath}");
+            return;
+        }
+
+        var projectileRoot = ChickenCoopProjectileScene.Instantiate<Node2D>();
+        if (projectileRoot == null)
+        {
+            return;
+        }
+
+        var projectileSprite = projectileRoot.GetNodeOrNull<Sprite2D>("ProjectileSprite");
+        var explosionParticles = projectileRoot.GetNodeOrNull<GpuParticles2D>("ExplosionParticles");
+
+        Node effectParent = global.GetTree().Root;
+        effectParent.AddChild(projectileRoot);
+
+        projectileRoot.TopLevel = true;
+        projectileRoot.ZAsRelative = false;
+        projectileRoot.ZIndex = 1200;
+
+        Vector2 startPos = owner.BindNode.GlobalPosition;
+        Vector2 targetPos = target.BindNode.GlobalPosition;
+
+        projectileRoot.GlobalPosition = startPos;
+
+        if (projectileSprite != null)
+        {
+            projectileSprite.Visible = true;
+            projectileSprite.Position = Vector2.Zero;
+        }
+
+        if (explosionParticles != null)
+        {
+            explosionParticles.Visible = false;
+            explosionParticles.Emitting = false;
+            explosionParticles.Position = Vector2.Zero;
+        }
+
+        Tween flyTween = global.CreateTween();
+        flyTween.TweenProperty(projectileRoot, "global_position", targetPos, ProjectileTravelDuration)
+            .SetTrans(Tween.TransitionType.Cubic)
+            .SetEase(Tween.EaseType.Out);
+
+        await global.ToSignal(flyTween, Tween.SignalName.Finished);
+
+        if (projectileSprite != null)
+        {
+            projectileSprite.Visible = false;
+        }
+
+        if (explosionParticles != null)
+        {
+            explosionParticles.Visible = true;
+            explosionParticles.Restart();
+            explosionParticles.Emitting = true;
+            await global.ToSignal(global.GetTree().CreateTimer(explosionParticles.Lifetime), SceneTreeTimer.SignalName.Timeout);
+            explosionParticles.Emitting = false;
+        }
+
+        projectileRoot.QueueFree();
     }
 }

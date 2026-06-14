@@ -5,6 +5,8 @@ public static class DotGlobalManager
 {
     public const string ReviewStatusId = "review";
     public const string GuHenStatusId = "guhen";
+    public const string MiaminYouAreDoneStatusId = "miamin_you_are_done";
+    public const string MiaminSelfDoubtStatusId = "miamin_self_doubt";
 
     public static DamageOverTime CreateReviewDot(GlobalScript.BattleUnit sourceUnit, int stackCount = 1)
     {
@@ -40,6 +42,41 @@ public static class DotGlobalManager
         };
     }
 
+    public static DamageOverTime CreateMiaminYouAreDoneDot(GlobalScript.BattleUnit sourceUnit, int stackCount = 1)
+    {
+        return new DamageOverTime
+        {
+            StatusId = MiaminYouAreDoneStatusId,
+            StatusName = "你丸了",
+            RemainingTurns = 3,
+            DamageMultiplier = 0.1f,
+            StackCount = Mathf.Max(1, stackCount),
+            SourceUnit = sourceUnit,
+            SnapshotValue = sourceUnit?.Attack ?? 0f,
+            CanStack = true,
+            MaxStacks = 3,
+            DamageTakenAmplifyPerStack = 0f
+        };
+    }
+
+    public static DamageOverTime CreateMiaminSelfDoubtStatus(GlobalScript.BattleUnit sourceUnit)
+    {
+        return new DamageOverTime
+        {
+            StatusId = MiaminSelfDoubtStatusId,
+            StatusName = "自我怀疑",
+            RemainingTurns = 5,
+            DamageMultiplier = 0f,
+            StackCount = 1,
+            SourceUnit = sourceUnit,
+            SnapshotValue = 0f,
+            CanStack = false,
+            MaxStacks = 1,
+            DamageTakenAmplifyPerStack = 0f,
+            DotDamageTakenMultiplier = 0.5f
+        };
+    }
+
     public static void ApplyDot(GlobalScript.BattleUnit target, DamageOverTime dot)
     {
         if (target == null || dot == null)
@@ -61,6 +98,7 @@ public static class DotGlobalManager
         existing.SnapshotValue = dot.SnapshotValue;
         existing.DamageMultiplier = dot.DamageMultiplier;
         existing.DamageTakenAmplifyPerStack = dot.DamageTakenAmplifyPerStack;
+        existing.DotDamageTakenMultiplier = dot.DotDamageTakenMultiplier;
         existing.CanStack = dot.CanStack;
         existing.MaxStacks = dot.MaxStacks;
 
@@ -110,6 +148,14 @@ public static class DotGlobalManager
 
         int stacks = Mathf.Max(1, dot.StackCount);
         float damage = Mathf.Max(0f, dot.SnapshotValue * dot.DamageMultiplier * stacks);
+        float dotDamageTakenBonus = GetDotDamageTakenBonus(target);
+        if (damage > 0f && dotDamageTakenBonus > 0f)
+        {
+            float beforeBonus = damage;
+            damage *= 1f + dotDamageTakenBonus;
+            GD.Print($"【持续伤害加深】{target.UnitName} 受到的持续伤害提高{dotDamageTakenBonus:P0}，{beforeBonus:0.0} → {damage:0.0}");
+        }
+
         if (damage <= 0f)
         {
             GD.Print($"【DoT结算】{target.UnitName} 的 {dot.StatusName} 伤害为 0，跳过");
@@ -117,7 +163,8 @@ public static class DotGlobalManager
         else
         {
             GD.Print($"【DoT结算】{target.UnitName} 触发 {dot.StatusName}，层数 {stacks}，伤害 {damage:0.0}");
-            global.TakeDamage(target, damage);
+            global.TakeDamage(target, damage, isDotDamage: true);
+            global.TriggerMiaminDotHealPassive(target, damage);
         }
 
         if (reduceDuration)
@@ -233,6 +280,21 @@ public static class DotGlobalManager
         foreach (var dot in target.DamageOverTimeEffects)
         {
             bonus += Mathf.Max(0, dot.DamageTakenAmplifyPerStack) * Mathf.Max(0, dot.StackCount);
+        }
+        return bonus;
+    }
+
+    public static float GetDotDamageTakenBonus(GlobalScript.BattleUnit target)
+    {
+        if (target?.DamageOverTimeEffects == null)
+        {
+            return 0f;
+        }
+
+        float bonus = 0f;
+        foreach (var dot in target.DamageOverTimeEffects)
+        {
+            bonus += Mathf.Max(0f, dot.DotDamageTakenMultiplier);
         }
         return bonus;
     }

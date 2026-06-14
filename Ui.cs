@@ -31,6 +31,7 @@ public partial class Ui : Control
     private GlobalScript.SkillData _currentUltimate;
 
     private bool _currentPlayerHasActed = false;
+    private bool _isResolvingSkill = false;
 
     public override void _Ready()
     {
@@ -116,7 +117,7 @@ public partial class Ui : Control
 
         // 按钮禁用逻辑（原有不变）
         bool isPlayerTurn = global.CurrentState == GlobalScript.BattleState.PlayerTurn;
-        bool shouldDisable = !isPlayerTurn || _currentPlayerHasActed;
+        bool shouldDisable = !isPlayerTurn || _currentPlayerHasActed || _isResolvingSkill;
 
         if (_passiveBtn != null) _passiveBtn.Disabled = true;
         if (_normalAttackBtn != null) _normalAttackBtn.Disabled = shouldDisable;
@@ -153,6 +154,7 @@ public partial class Ui : Control
     public void OnSinglePlayerTurnStart(GlobalScript.BattleUnit playerUnit)
     {
         _currentPlayerHasActed = false;
+        _isResolvingSkill = false;
         if (_skillsContainer != null) _skillsContainer.Visible = false;
         // ========== 核心修改4：隐藏自定义提示框 ==========
         if (_skillTooltip != null) _skillTooltip.Hide();
@@ -224,6 +226,7 @@ public partial class Ui : Control
             _battleTipLabel.Text = $"新敌人【{newEnemy.UnitName}】登场！";
         }
         _currentPlayerHasActed = false;
+        _isResolvingSkill = false;
     }
 
     // ========== 核心修改5：替换悬停显示逻辑为自定义提示框 ==========
@@ -269,6 +272,7 @@ public partial class Ui : Control
         if (!CanCastSkill(global) || _currentNormal == null) return;
 
         _currentPlayerHasActed = true;
+        _isResolvingSkill = true;
         if (_skillsContainer != null) _skillsContainer.Visible = false;
         BroadcastSkillName(_currentNormal.SkillName, true);
 
@@ -276,6 +280,7 @@ public partial class Ui : Control
         var enemies = global.GetAliveEnemies();
         if (enemies.Count == 0)
         {
+            _isResolvingSkill = false;
             EndCurrentPlayerAction(global);
             return;
         }
@@ -283,7 +288,7 @@ public partial class Ui : Control
 
         await ToSignal(GetTree().CreateTimer(0.2f), "timeout");
 
-        float baseDamage = caster.UnitName == "苹果大王"
+        float baseDamage = caster.UnitName == "苹果大王" || caster.UnitName == "迈阿密"
             ? caster.Attack * 0.05f
             : caster.HpMax * 0.05f;
         float finalDamage = baseDamage;
@@ -337,7 +342,7 @@ public partial class Ui : Control
             await global.TriggerCoopAttack(target);
         }
 
-        CheckBattleAndContinue(global);
+        FinishTurnConsumingAction(global);
     }
 
     private async void OnSpecialSkillCast()
@@ -355,6 +360,7 @@ public partial class Ui : Control
         }
 
         _currentPlayerHasActed = true;
+        _isResolvingSkill = true;
         if (_skillsContainer != null) _skillsContainer.Visible = false;
         BroadcastSkillName(_currentSpecial.SkillName, true);
 
@@ -389,6 +395,7 @@ public partial class Ui : Control
         {
             if (enemies.Count == 0)
             {
+                _isResolvingSkill = false;
                 EndCurrentPlayerAction(global);
                 return;
             }
@@ -475,6 +482,7 @@ public partial class Ui : Control
         {
             if (enemies.Count == 0)
             {
+                _isResolvingSkill = false;
                 EndCurrentPlayerAction(global);
                 return;
             }
@@ -516,6 +524,7 @@ public partial class Ui : Control
         {
             if (enemies.Count == 0)
             {
+                _isResolvingSkill = false;
                 EndCurrentPlayerAction(global);
                 return;
             }
@@ -553,6 +562,51 @@ public partial class Ui : Control
 
             await global.TriggerCoopAttack(target);
         }
+        else if (caster.UnitName == "迈阿密")
+        {
+            if (enemies.Count == 0)
+            {
+                _isResolvingSkill = false;
+                EndCurrentPlayerAction(global);
+                return;
+            }
+
+            global.SpendFocus(1);
+            await ToSignal(GetTree().CreateTimer(0.2f), "timeout");
+
+            tip = $"{caster.UnitName}释放{_currentSpecial.SkillName}！\n";
+            foreach (var enemy in enemies)
+            {
+                float finalDamage = caster.Attack * 0.1f;
+                bool isCrit = false;
+
+                float finalCritRate = caster.GetFinalCritRate();
+                float randomValue = (float)GlobalScript.GlobalRandom.NextDouble();
+                if (randomValue <= finalCritRate)
+                {
+                    isCrit = true;
+                    finalDamage *= caster.GetFinalCritDamage();
+                }
+
+                if (enemy.Hardened)
+                {
+                    finalDamage /= 2f;
+                }
+
+                global.TakeDamage(enemy, finalDamage, isCrit: isCrit);
+                global.ApplyMiaminYouAreDone(caster, enemy, 1);
+                tip += $"{enemy.UnitName}受到{finalDamage:0.0}点伤害并被施加1层【你丸了】！\n";
+                if (isCrit)
+                {
+                    tip = "💥 暴击！！\n" + tip;
+                }
+            }
+
+            skillExecuted = true;
+            if (_battleTipLabel != null) _battleTipLabel.Text = tip;
+
+            await global.TriggerCoopAttack(enemies[0]);
+        }
         else
         {
             tip = "该角色暂未实装特殊技能！";
@@ -564,7 +618,7 @@ public partial class Ui : Control
             global.ApplySkillEnergy(caster, _currentSpecial);
         }
 
-        CheckBattleAndContinue(global);
+        FinishTurnConsumingAction(global);
     }
 
     private async void OnUltimateCast()
@@ -583,7 +637,7 @@ public partial class Ui : Control
             return;
         }
 
-        _currentPlayerHasActed = true;
+        _isResolvingSkill = true;
         if (_skillsContainer != null) _skillsContainer.Visible = false;
         BroadcastSkillName(_currentUltimate.SkillName, true);
 
@@ -644,7 +698,7 @@ public partial class Ui : Control
 
             global.ApplySkillEnergy(caster, _currentUltimate);
             if (_battleTipLabel != null) _battleTipLabel.Text = tip;
-            CheckBattleAndContinue(global);
+            ReturnToCurrentPlayerTurnAfterUltimate(global, caster);
             return;
         }
         // ✅ 邪恶兔大招逻辑
@@ -653,7 +707,7 @@ public partial class Ui : Control
         {
             if (enemies.Count == 0)
             {
-                EndCurrentPlayerAction(global);
+                _isResolvingSkill = false;
                 return;
             }
             var target = enemies[0];
@@ -723,8 +777,7 @@ public partial class Ui : Control
 
             global.ApplySkillEnergy(caster, _currentUltimate);
 
-            // 5. 所有逻辑完成后，再走回合结束
-            CheckBattleAndContinue(global);
+            ReturnToCurrentPlayerTurnAfterUltimate(global, caster);
             return;
         }
         // ✅ 小鸡大招逻辑
@@ -732,7 +785,7 @@ public partial class Ui : Control
         {
             if (enemies.Count == 0)
             {
-                EndCurrentPlayerAction(global);
+                _isResolvingSkill = false;
                 return;
             }
             var target = enemies[0];
@@ -768,14 +821,14 @@ public partial class Ui : Control
             if (_battleTipLabel != null) _battleTipLabel.Text = tip;
 
             global.ApplySkillEnergy(caster, _currentUltimate);
-            CheckBattleAndContinue(global);
+            ReturnToCurrentPlayerTurnAfterUltimate(global, caster);
             return;
         }
         else if (caster.UnitName == "苹果大王")
         {
             if (enemies.Count == 0)
             {
-                EndCurrentPlayerAction(global);
+                _isResolvingSkill = false;
                 return;
             }
 
@@ -816,7 +869,53 @@ public partial class Ui : Control
             tip += "场上所有敌人的持续伤害已被引爆！";
             if (_battleTipLabel != null) _battleTipLabel.Text = tip;
 
-            CheckBattleAndContinue(global);
+            ReturnToCurrentPlayerTurnAfterUltimate(global, caster);
+            return;
+        }
+        else if (caster.UnitName == "迈阿密")
+        {
+            if (enemies.Count == 0)
+            {
+                _isResolvingSkill = false;
+                return;
+            }
+
+            await ToSignal(GetTree().CreateTimer(0.2f), "timeout");
+
+            tip = $"{caster.UnitName}释放{_currentUltimate.SkillName}！\n";
+            foreach (var enemy in enemies)
+            {
+                float finalDamage = caster.Attack * 0.3f;
+                bool isCrit = false;
+
+                float finalCritRate = caster.GetFinalCritRate();
+                float randomValue = (float)GlobalScript.GlobalRandom.NextDouble();
+                if (randomValue <= finalCritRate)
+                {
+                    isCrit = true;
+                    finalDamage *= caster.GetFinalCritDamage();
+                }
+
+                if (enemy.Hardened)
+                {
+                    finalDamage /= 2f;
+                }
+
+                global.TakeDamage(enemy, finalDamage, isCrit: isCrit);
+                global.ApplyMiaminSelfDoubt(caster, enemy);
+                tip += $"{enemy.UnitName}受到{finalDamage:0.0}点伤害并陷入【自我怀疑】！\n";
+                if (isCrit)
+                {
+                    tip = "💥 暴击！！\n" + tip;
+                }
+            }
+
+            global.ApplySkillEnergy(caster, _currentUltimate);
+            await global.TriggerCoopAttack(enemies[0]);
+
+            if (_battleTipLabel != null) _battleTipLabel.Text = tip;
+
+            ReturnToCurrentPlayerTurnAfterUltimate(global, caster);
             return;
         }
     }
@@ -844,9 +943,7 @@ public partial class Ui : Control
             return;
         }
 
-        // ✅ 关键修改：从固定选一号位改成随机选存活玩家
-        int randomTargetIndex = GlobalScript.GlobalRandom.Next(0, alivePlayers.Count);
-        var target = alivePlayers[randomTargetIndex];
+        var target = SelectEnemyTarget(global, enemy, alivePlayers);
         GD.Print($"【敌人AI】{enemy.UnitName}随机选择了{target.UnitName}作为目标！");
 
         var rand = GlobalScript.GlobalRandom;
@@ -871,13 +968,15 @@ public partial class Ui : Control
         {
             case 0:
                 BroadcastSkillName("普通攻击", false);
-                global.TakeDamage(target, enemy.Attack * 1f);
+                global.TakeDamage(target, enemy.Attack * 1f, sourceUnit: enemy);
+                TryApplyMiaminRetaliatoryStack(global, enemy, target);
                 if (_battleTipLabel != null)
                     _battleTipLabel.Text = $"{enemy.UnitName}发动普通攻击！";
                 break;
             case 1:
                 BroadcastSkillName("重击", false);
-                global.TakeDamage(target, enemy.Attack * 1.6f);
+                global.TakeDamage(target, enemy.Attack * 1.6f, sourceUnit: enemy);
+                TryApplyMiaminRetaliatoryStack(global, enemy, target);
                 if (_battleTipLabel != null)
                     _battleTipLabel.Text = $"{enemy.UnitName}发动重击！";
                 break;
@@ -914,7 +1013,39 @@ public partial class Ui : Control
         return global != null
             && global.CurrentState == GlobalScript.BattleState.PlayerTurn
             && !_currentPlayerHasActed
+            && !_isResolvingSkill
             && global.CurrentActingUnit != null;
+    }
+
+    private GlobalScript.BattleUnit SelectEnemyTarget(GlobalScript global, GlobalScript.BattleUnit enemy, System.Collections.Generic.List<GlobalScript.BattleUnit> alivePlayers)
+    {
+        var miamin = global.GetAliveMiamin();
+        bool hasYouAreDone = DotGlobalManager.GetDot(enemy, DotGlobalManager.MiaminYouAreDoneStatusId) != null;
+        if (hasYouAreDone && miamin != null && alivePlayers.Contains(miamin) && GlobalScript.GlobalRandom.NextDouble() < 0.7)
+        {
+            GD.Print($"【你丸了】{enemy.UnitName}更容易将迈阿密作为攻击目标");
+            return miamin;
+        }
+
+        int randomTargetIndex = GlobalScript.GlobalRandom.Next(0, alivePlayers.Count);
+        return alivePlayers[randomTargetIndex];
+    }
+
+    private void TryApplyMiaminRetaliatoryStack(GlobalScript global, GlobalScript.BattleUnit enemy, GlobalScript.BattleUnit target)
+    {
+        if (target == null || target.UnitName != "迈阿密")
+        {
+            return;
+        }
+
+        var youAreDone = DotGlobalManager.GetDot(enemy, DotGlobalManager.MiaminYouAreDoneStatusId);
+        if (youAreDone == null)
+        {
+            return;
+        }
+
+        global.ApplyMiaminYouAreDone(youAreDone.SourceUnit ?? target, enemy, 1);
+        GD.Print($"【你丸了】{enemy.UnitName}攻击迈阿密，自身额外叠加1层【你丸了】");
     }
 
     private void CheckBattleAndContinue(GlobalScript global)
@@ -927,6 +1058,35 @@ public partial class Ui : Control
         EndCurrentPlayerAction(global);
     }
 
+    private void FinishTurnConsumingAction(GlobalScript global)
+    {
+        _isResolvingSkill = false;
+        CheckBattleAndContinue(global);
+    }
+
+    private void ReturnToCurrentPlayerTurnAfterUltimate(GlobalScript global, GlobalScript.BattleUnit caster)
+    {
+        if (global.CheckBattleEnd())
+        {
+            OnBattleEnd(global);
+            return;
+        }
+
+        _isResolvingSkill = false;
+        _currentPlayerHasActed = false;
+
+        if (_skillsContainer != null)
+        {
+            _skillsContainer.Visible = false;
+        }
+
+        if (global.CurrentState == GlobalScript.BattleState.PlayerTurn && global.CurrentActingUnit == caster && _attrLabel != null)
+        {
+            _attrLabel.Visible = true;
+            RefreshAttrLabel(caster);
+        }
+    }
+
     private void EndCurrentPlayerAction(GlobalScript global)
     {
         GetTree().CreateTimer(1.0f).Timeout += () =>
@@ -937,6 +1097,7 @@ public partial class Ui : Control
 
     private void OnBattleEnd(GlobalScript global)
     {
+        _isResolvingSkill = false;
         if (GodotObject.IsInstanceValid(_notifierTween))
         {
             _notifierTween.Kill();

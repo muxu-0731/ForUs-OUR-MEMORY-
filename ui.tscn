@@ -4,10 +4,6 @@
 [ext_resource type="Script" uid="uid://bja8tc3v6ushl" path="res://Ui.cs" id="1_m6e0p"]
 [ext_resource type="FontFile" uid="uid://bkr0q2c4q73gc" path="res://Font/m5x7.ttf" id="3_27fn8"]
 
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_m6e0p"]
-
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_27fn8"]
-
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_xb563"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_fyqef"]
@@ -41,24 +37,6 @@ grow_horizontal = 2
 grow_vertical = 2
 script = ExtResource("1_m6e0p")
 
-[node name="daojubao" type="MenuButton" parent="." unique_id=637537955]
-layout_mode = 0
-offset_left = 10.0
-offset_top = 20.0
-offset_right = 113.0
-offset_bottom = 91.0
-theme_override_font_sizes/font_size = 28
-theme_override_styles/normal = SubResource("StyleBoxFlat_m6e0p")
-theme_override_styles/pressed = ExtResource("1_fyqef")
-theme_override_styles/hover = SubResource("StyleBoxFlat_27fn8")
-text = "道具"
-flat = false
-item_count = 2
-popup/item_0/text = "生命药水"
-popup/item_0/id = 1
-popup/item_1/text = "法力药水"
-popup/item_1/id = 2
-
 [node name="skill" type="Button" parent="." unique_id=1601024833]
 layout_mode = 0
 offset_left = 123.0
@@ -69,6 +47,7 @@ theme_override_colors/font_color = Color(1, 1, 1, 1)
 theme_override_colors/font_focus_color = Color(1, 1, 1, 1)
 theme_override_colors/font_pressed_color = Color(1, 1, 1, 1)
 theme_override_colors/font_hover_color = Color(0.95, 0.95, 0.95, 1)
+theme_override_fonts/font = ExtResource("3_27fn8")
 theme_override_font_sizes/font_size = 28
 theme_override_styles/normal = SubResource("StyleBoxFlat_xb563")
 theme_override_styles/hover = SubResource("StyleBoxFlat_fyqef")
@@ -84,24 +63,28 @@ offset_bottom = 216.0
 [node name="passive_skill" type="MenuButton" parent="skill/SkillsContainer" unique_id=685643457]
 layout_mode = 2
 size_flags_vertical = 3
+theme_override_fonts/font = ExtResource("3_27fn8")
 text = "被动技能"
 flat = false
 
 [node name="normalattack" type="MenuButton" parent="skill/SkillsContainer" unique_id=598422524]
 layout_mode = 2
 size_flags_vertical = 3
+theme_override_fonts/font = ExtResource("3_27fn8")
 text = "普通攻击"
 flat = false
 
 [node name="special_skill" type="MenuButton" parent="skill/SkillsContainer" unique_id=1886237125]
 layout_mode = 2
 size_flags_vertical = 3
+theme_override_fonts/font = ExtResource("3_27fn8")
 text = "特殊技能"
 flat = false
 
 [node name="ultimate_ability" type="MenuButton" parent="skill/SkillsContainer" unique_id=749786257]
 layout_mode = 2
 size_flags_vertical = 3
+theme_override_fonts/font = ExtResource("3_27fn8")
 text = "大招"
 flat = false
 

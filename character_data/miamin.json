@@ -1,0 +1,41 @@
+{
+  "UnitName": "迈阿密",
+  "TexturePath": "res://character_picture/miamin.png",
+  "Hp": 180,
+  "HpMax": 180,
+  "Attack": 130,
+  "CritRate": 0.05,
+  "CritDamage": 1.5,
+  "IsPlayerUnit": true,
+  "MaxEnergy": 80,
+  "Skills": [
+    {
+      "SkillId": "miamin_passive",
+      "SkillName": "玩丸了？",
+      "Description": "受到致命伤害时，不会陷入力竭，而是进入【没丸呢】状态，强行锁定生命值为1点，直到下次轮到迈阿密的回合。【没丸呢】状态结束时，恢复血量至【最大生命值的50%】。该效果每局游戏最多触发一次。迈阿密在场时，每当场上敌人受到一次持续伤害，都会使全体队友恢复【1%各自最大生命值】的血量。",
+      "Type": "Passive",
+      "EnergyCost": 0
+    },
+    {
+      "SkillId": "miamin_normal",
+      "SkillName": "牛肉丸",
+      "Description": "对目标造成【5%攻击力】的伤害。",
+      "Type": "Normal",
+      "EnergyCost": -10
+    },
+    {
+      "SkillId": "miamin_special",
+      "SkillName": "贡丸",
+      "Description": "对所有敌人造成【10%攻击力】的伤害，并为这些敌人施加一层【你丸了】，持续三个回合。【你丸了】被视为持续伤害，在敌人回合开始时，每一层【你丸了】都会对该敌人造成【10%攻击力】的伤害，最多叠加三层。叠加会额外刷新持续时间。此外，持有【你丸了】的敌人更容易将迈阿密作为攻击目标，且在攻击迈阿密时，会使自身再叠加一层【你丸了】。敌人每持有一层【你丸了】，都会使其对迈阿密造成的伤害降低20%。",
+      "Type": "Special",
+      "EnergyCost": -40
+    },
+    {
+      "SkillId": "miamin_ult",
+      "SkillName": "四喜丸子",
+      "Description": "对所有敌人造成【30%攻击力】的伤害，使所有敌人陷入【自我怀疑】，持续五个回合。【自我怀疑】不可叠加，会使敌人受到的所有持续伤害提高50%。",
+      "Type": "Ultimate",
+      "EnergyCost": 40
+    }
+  ]
+}

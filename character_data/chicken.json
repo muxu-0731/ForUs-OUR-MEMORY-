@@ -7,7 +7,7 @@
   "CritRate": 0.08,
   "CritDamage": 1.5,
   "IsPlayerUnit": true,
-  "MaxEnergy": 60,
+  "MaxEnergy": 50,
   "Skills": [
     {
       "SkillId": "chicken_passive",
@@ -35,7 +35,7 @@
       "SkillName": "轻松过关！",
       "Description": "对敌人造成【30%自身最大生命值】的伤害，并使该敌人立即陷入十层【锐评】,同时额外在接下来的三回合内降低该敌人60%防御力。",
       "Type": "Ultimate",
-      "EnergyCost": 60
+      "EnergyCost": 50
     }
   ]
 }

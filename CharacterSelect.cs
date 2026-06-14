@@ -2,9 +2,12 @@ using Godot;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text.Json;
 
 public partial class CharacterSelect : Control
 {
+    private const int CharactersPerPage = 4;
+
     private class CharacterInfo
     {
         public string Name;
@@ -19,12 +22,10 @@ public partial class CharacterSelect : Control
         public Label OrderLabel;
     }
 
-    private readonly List<CharacterInfo> _characters = new()
+    private readonly List<CharacterInfo> _characters = new();
+    private static readonly JsonSerializerOptions CharacterJsonOptions = new()
     {
-        new CharacterInfo { Name = "外卖猫", TexturePath = "res://character_picture/deliverycat.png" },
-        new CharacterInfo { Name = "邪恶兔", TexturePath = "res://character_picture/evilrabbit.png" },
-        new CharacterInfo { Name = "小鸡", TexturePath = "res://character_picture/chicken.png" },
-        new CharacterInfo { Name = "苹果大王", TexturePath = "res://character_picture/apple_queen.png" }
+        PropertyNameCaseInsensitive = true
     };
 
     private readonly List<CharacterInfo> _selectedTeam = new();
@@ -36,10 +37,69 @@ public partial class CharacterSelect : Control
     private Button _clearButton;
     private Button _backButton;
     private Button _confirmButton;
+    private Button _prevPageButton;
+    private Button _nextPageButton;
+    private int _currentPage = 0;
+
     public override void _Ready()
     {
+        LoadCharactersFromJson();
         BuildUi();
+        RefreshPage();
         SyncButtonsState();
+    }
+
+    private void LoadCharactersFromJson()
+    {
+        _characters.Clear();
+
+        using var dir = DirAccess.Open("res://character_data");
+        if (dir == null)
+        {
+            GD.PrintErr($"角色选择加载失败：无法打开角色数据目录，错误码：{DirAccess.GetOpenError()}");
+            return;
+        }
+
+        foreach (string fileName in dir.GetFiles().OrderBy(file => file, StringComparer.OrdinalIgnoreCase))
+        {
+            if (!fileName.EndsWith(".json", StringComparison.OrdinalIgnoreCase))
+            {
+                continue;
+            }
+
+            string jsonPath = $"res://character_data/{fileName}";
+            try
+            {
+                using var file = Godot.FileAccess.Open(jsonPath, Godot.FileAccess.ModeFlags.Read);
+                if (file == null)
+                {
+                    GD.PrintErr($"角色选择加载失败：无法打开 {jsonPath}，错误码：{Godot.FileAccess.GetOpenError()}");
+                    continue;
+                }
+
+                var config = JsonSerializer.Deserialize<CharacterConfig>(file.GetAsText(), CharacterJsonOptions);
+                if (config == null || !config.IsPlayerUnit || string.IsNullOrWhiteSpace(config.UnitName) || string.IsNullOrWhiteSpace(config.TexturePath))
+                {
+                    continue;
+                }
+
+                if (_characters.Any(character => character.Name == config.UnitName))
+                {
+                    GD.PrintErr($"角色选择加载跳过重复角色：{config.UnitName}");
+                    continue;
+                }
+
+                _characters.Add(new CharacterInfo
+                {
+                    Name = config.UnitName,
+                    TexturePath = config.TexturePath
+                });
+            }
+            catch (Exception ex)
+            {
+                GD.PrintErr($"角色选择解析失败：{jsonPath}，异常：{ex.Message}");
+            }
+        }
     }
 
     private void BuildUi()
@@ -105,6 +165,20 @@ public partial class CharacterSelect : Control
             _cardsByName[character.Name] = card;
             _grid.AddChild(card);
         }
+
+        var pageControls = new HBoxContainer { Name = "PageControls" };
+        pageControls.SizeFlagsHorizontal = Control.SizeFlags.ShrinkCenter;
+        pageControls.Alignment = BoxContainer.AlignmentMode.Center;
+        pageControls.AddThemeConstantOverride("separation", 16);
+        left.AddChild(pageControls);
+
+        _prevPageButton = CreateMenuButton("上一页");
+        _prevPageButton.Pressed += OnPrevPagePressed;
+        pageControls.AddChild(_prevPageButton);
+
+        _nextPageButton = CreateMenuButton("下一页");
+        _nextPageButton.Pressed += OnNextPagePressed;
+        pageControls.AddChild(_nextPageButton);
 
         var right = new VBoxContainer { Name = "RightPanel" };
         right.CustomMinimumSize = new Vector2(320, 0);
@@ -310,6 +384,73 @@ public partial class CharacterSelect : Control
     private void SyncButtonsState()
     {
         _confirmButton.Disabled = _selectedTeam.Count != 3;
+        RefreshPageButtons();
+    }
+
+    private int GetTotalPages()
+    {
+        return Mathf.Max(1, Mathf.CeilToInt((float)_characters.Count / CharactersPerPage));
+    }
+
+    private void RefreshPage()
+    {
+        int totalPages = GetTotalPages();
+        _currentPage = Mathf.Clamp(_currentPage, 0, totalPages - 1);
+
+        int startIndex = _currentPage * CharactersPerPage;
+        int endIndex = Mathf.Min(startIndex + CharactersPerPage, _characters.Count);
+
+        for (int i = 0; i < _characters.Count; i++)
+        {
+            var character = _characters[i];
+            if (_cardsByName.TryGetValue(character.Name, out var card))
+            {
+                card.Visible = i >= startIndex && i < endIndex;
+            }
+        }
+
+        RefreshPageButtons();
+    }
+
+    private void RefreshPageButtons()
+    {
+        int totalPages = GetTotalPages();
+        bool hasMultiplePages = totalPages > 1;
+
+        if (_prevPageButton != null)
+        {
+            _prevPageButton.Visible = hasMultiplePages;
+            _prevPageButton.Disabled = !hasMultiplePages || _currentPage <= 0;
+        }
+
+        if (_nextPageButton != null)
+        {
+            _nextPageButton.Visible = hasMultiplePages;
+            _nextPageButton.Disabled = !hasMultiplePages || _currentPage >= totalPages - 1;
+        }
+    }
+
+    private void OnPrevPagePressed()
+    {
+        if (_currentPage <= 0)
+        {
+            return;
+        }
+
+        _currentPage--;
+        RefreshPage();
+    }
+
+    private void OnNextPagePressed()
+    {
+        int totalPages = GetTotalPages();
+        if (_currentPage >= totalPages - 1)
+        {
+            return;
+        }
+
+        _currentPage++;
+        RefreshPage();
     }
 
     private void OnClearPressed()

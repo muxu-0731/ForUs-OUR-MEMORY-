@@ -13,6 +13,7 @@ public class DamageOverTime
     public bool CanStack { get; set; } = true;
     public int MaxStacks { get; set; } = int.MaxValue;
     public float DamageTakenAmplifyPerStack { get; set; }
+    public float DotDamageTakenMultiplier { get; set; }
 
     public DamageOverTime Clone()
     {
@@ -27,7 +28,8 @@ public class DamageOverTime
             SnapshotValue = SnapshotValue,
             CanStack = CanStack,
             MaxStacks = MaxStacks,
-            DamageTakenAmplifyPerStack = DamageTakenAmplifyPerStack
+            DamageTakenAmplifyPerStack = DamageTakenAmplifyPerStack,
+            DotDamageTakenMultiplier = DotDamageTakenMultiplier
         };
     }
 }
