@@ -1,77 +1,70 @@
 [gd_scene format=3 uid="uid://cpji318a3e77"]
 
-[ext_resource type="Texture2D" uid="uid://d2pskkag5ogkh" path="res://sucaibao - 副本/GameAssets/background.png" id="1_06t4h"]
 [ext_resource type="Script" uid="uid://ba8s2dc3tvj1i" path="res://MainMenu.cs" id="1_7vrkn"]
+[ext_resource type="Texture2D" uid="uid://b406rysdjh03i" path="res://background_picture/campus.png" id="2_fu7sn"]
+[ext_resource type="FontFile" uid="uid://bkr0q2c4q73gc" path="res://Font/m5x7.ttf" id="3_jix8l"]
+[ext_resource type="LabelSettings" uid="uid://dtjixvoil4bg0" path="res://开场标题.tres" id="4_jix8l"]
 
-[sub_resource type="LabelSettings" id="LabelSettings_06t4h"]
-font_size = 58
-
-[node name="MainMenuRoot" type="Control" unique_id=1075177353]
-layout_mode = 3
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
+[node name="MainMenuRoot" type="Node2D" unique_id=596678070]
 script = ExtResource("1_7vrkn")
-metadata/_edit_use_anchors_ = true
 
-[node name="BgImage" type="TextureRect" parent="." unique_id=1321179881]
-layout_mode = 1
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
-texture = ExtResource("1_06t4h")
+[node name="Background" type="Sprite2D" parent="." unique_id=872825037]
+position = Vector2(574.49994, 325.49997)
+scale = Vector2(0.68720096, 0.6811902)
+texture = ExtResource("2_fu7sn")
 
-[node name="TitleLabel" type="Label" parent="." unique_id=938927192]
-layout_mode = 1
+[node name="CanvasLayer" type="CanvasLayer" parent="." unique_id=1650466099]
+
+[node name="TitleLabel" type="Label" parent="CanvasLayer" unique_id=938927192]
 anchors_preset = 5
 anchor_left = 0.5
 anchor_right = 0.5
-offset_left = -117.0
-offset_top = 83.0
-offset_right = 115.0
-offset_bottom = 245.0
-grow_horizontal = 2
-text = "ForUs
-献给我们"
-label_settings = SubResource("LabelSettings_06t4h")
-horizontal_alignment = 1
-
-[node name="BtnQuit" type="Button" parent="." unique_id=748284175]
-layout_mode = 1
-anchors_preset = 8
-anchor_left = 0.5
-anchor_top = 0.5
-anchor_right = 0.5
-anchor_bottom = 0.5
-offset_left = -108.0
-offset_top = 113.0
-offset_right = 110.0
+offset_left = -111.0
+offset_top = 32.0
+offset_right = 121.0
 offset_bottom = 194.0
 grow_horizontal = 2
-grow_vertical = 2
+theme_override_colors/font_color = Color(1, 0.9529412, 0.6901961, 1)
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+theme_override_fonts/font = ExtResource("3_jix8l")
+text = "ForUs
+献 给 我 们"
+label_settings = ExtResource("4_jix8l")
+horizontal_alignment = 1
+
+[node name="BtnQuit" type="Button" parent="CanvasLayer" unique_id=748284175]
+anchors_preset = 7
+anchor_left = 0.5
+anchor_top = 1.0
+anchor_right = 0.5
+anchor_bottom = 1.0
+offset_left = -109.0
+offset_top = -176.0
+offset_right = 109.0
+offset_bottom = -95.0
+grow_horizontal = 2
+grow_vertical = 0
+theme_override_fonts/font = ExtResource("3_jix8l")
 theme_override_font_sizes/font_size = 35
 text = "退出游戏"
 
-[node name="ChooseCharacter" type="Button" parent="." unique_id=4616324]
-layout_mode = 1
+[node name="ChooseCharacter" type="Button" parent="CanvasLayer" unique_id=4616324]
 anchors_preset = 8
 anchor_left = 0.5
 anchor_top = 0.5
 anchor_right = 0.5
 anchor_bottom = 0.5
 offset_left = -109.0
-offset_top = -37.0
+offset_top = -40.5
 offset_right = 109.0
-offset_bottom = 44.0
+offset_bottom = 40.5
 grow_horizontal = 2
 grow_vertical = 2
 theme_override_colors/font_color = Color(0.8745098, 0.5647059, 0.2509804, 1)
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+theme_override_fonts/font = ExtResource("3_jix8l")
 theme_override_font_sizes/font_size = 35
 text = "选择角色"
 
-[connection signal="button_down" from="BtnQuit" to="." method="OnQuitPressed"]
-[connection signal="button_down" from="ChooseCharacter" to="." method="OnChooseCharacterPressed"]
+[connection signal="button_down" from="CanvasLayer/BtnQuit" to="." method="OnQuitPressed"]
+[connection signal="button_down" from="CanvasLayer/ChooseCharacter" to="." method="OnChooseCharacterPressed"]

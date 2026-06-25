@@ -7,6 +7,7 @@ using System.Text.Json;
 public partial class CharacterSelect : Control
 {
     private const int CharactersPerPage = 4;
+    private const int MaxPartySize = GlobalScript.MaxPartySize;
 
     private class CharacterInfo
     {
@@ -335,9 +336,9 @@ public partial class CharacterSelect : Control
             return;
         }
 
-        if (_selectedTeam.Count >= 3)
+        if (_selectedTeam.Count >= MaxPartySize)
         {
-            ShowMessage("最多只能选择3个角色");
+            ShowMessage($"最多只能选择{MaxPartySize}个角色");
             return;
         }
 
@@ -383,7 +384,7 @@ public partial class CharacterSelect : Control
 
     private void SyncButtonsState()
     {
-        _confirmButton.Disabled = _selectedTeam.Count != 3;
+        _confirmButton.Disabled = _selectedTeam.Count != MaxPartySize;
         RefreshPageButtons();
     }
 
@@ -472,9 +473,9 @@ public partial class CharacterSelect : Control
 
     private void OnConfirmPressed()
     {
-        if (_selectedTeam.Count != 3)
+        if (_selectedTeam.Count != MaxPartySize)
         {
-            ShowMessage("请先选满3个角色");
+            ShowMessage($"请先选满{MaxPartySize}个角色");
             return;
         }
 

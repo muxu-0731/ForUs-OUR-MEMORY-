@@ -37,9 +37,10 @@ public partial class EnergyBar : Control
         {
             if (!_missingBindLogged)
             {
-                GD.PrintErr("EnergyBar 绑定失败：父节点不是 Node2D。");
+                GD.PrintErr("EnergyBar bind failed: parent node is not Node2D.");
                 _missingBindLogged = true;
             }
+
             Visible = false;
             return;
         }
@@ -64,7 +65,7 @@ public partial class EnergyBar : Control
         int currentEnergy = Mathf.Clamp(unit.CurrentEnergy, 0, maxEnergy);
         if (currentEnergy != unit.CurrentEnergy)
         {
-            GD.PrintErr($"EnergyBar 检测到能量越界，已自动修正：{unit.UnitName} {unit.CurrentEnergy}/{maxEnergy} -> {currentEnergy}/{maxEnergy}");
+            GD.PrintErr($"EnergyBar detected out-of-range energy for {unit.UnitName}: {unit.CurrentEnergy}/{maxEnergy} -> {currentEnergy}/{maxEnergy}");
             unit.CurrentEnergy = currentEnergy;
         }
 
@@ -121,7 +122,7 @@ public partial class EnergyBar : Control
 
         if (unit == null && !_missingBindLogged)
         {
-            GD.PrintErr($"EnergyBar 绑定失败：父节点 {GetParent()?.Name} 尚未绑定 BattleUnit。");
+            GD.PrintErr($"EnergyBar bind failed: parent {GetParent()?.Name} has no BattleUnit.");
             _missingBindLogged = true;
         }
 
@@ -134,9 +135,10 @@ public partial class EnergyBar : Control
         {
             if (!_missingBindLogged)
             {
-                GD.PrintErr("EnergyBar 布局失败：父节点不是带贴图的 Sprite2D。");
+                GD.PrintErr("EnergyBar layout failed: parent is not a Sprite2D with a texture.");
                 _missingBindLogged = true;
             }
+
             Visible = false;
             return;
         }
@@ -155,11 +157,24 @@ public partial class EnergyBar : Control
         Vector2 safeScale = new Vector2(
             Mathf.Max(Mathf.Abs(sprite.Scale.X), 0.001f),
             Mathf.Max(Mathf.Abs(sprite.Scale.Y), 0.001f));
+        Rect2 displayBounds = ResolveDisplayBounds(sprite);
 
-        // 能量条固定挂在角色右下角外侧 5px，条体尺寸始终保持 12x70。
+        // Keep the energy bar at a fixed screen size while anchoring it to the sprite's visual bounds.
         Scale = new Vector2(1f / safeScale.X, 1f / safeScale.Y);
         Position = new Vector2(
-            sprite.Texture.GetSize().X * 0.5f + EnergyMargin / safeScale.X,
-            -contentHeight * 0.5f / safeScale.Y);
+            displayBounds.Position.X + displayBounds.Size.X + EnergyMargin / safeScale.X,
+            displayBounds.Position.Y + (displayBounds.Size.Y - contentHeight / safeScale.Y) * 0.5f);
+    }
+
+    private Rect2 ResolveDisplayBounds(Sprite2D sprite)
+    {
+        if (sprite is Player player)
+        {
+            return player.GetDisplayBoundsLocal();
+        }
+
+        Vector2 textureSize = sprite.Texture.GetSize();
+        Vector2 drawOrigin = -textureSize * 0.5f + sprite.Offset;
+        return new Rect2(drawOrigin, textureSize);
     }
 }

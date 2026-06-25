@@ -1,6 +1,6 @@
 [gd_scene format=3 uid="uid://cwpqw2avxujv5"]
 
-[ext_resource type="Texture2D" uid="uid://8tsmkit8gmxi" path="res://2dres/shot.png" id="1_nkqgs"]
+[ext_resource type="Texture2D" uid="uid://8tsmkit8gmxi" path="res://2dres - 副本/shot.png" id="1_nkqgs"]
 
 [sub_resource type="Gradient" id="Gradient_vc27l"]
 
@@ -10,11 +10,10 @@ gradient = SubResource("Gradient_vc27l")
 [sub_resource type="ParticleProcessMaterial" id="ParticleProcessMaterial_dq4ji"]
 particle_flag_disable_z = true
 spread = 180.0
-initial_velocity_min = 120.0
-initial_velocity_max = 120.0
+initial_velocity_min = 150.61
+initial_velocity_max = 262.86
 gravity = Vector3(0, 98, 0)
-scale_min = 0.39999998
-scale_max = 0.39999998
+scale_max = 3.0
 color_ramp = SubResource("GradientTexture1D_aj3k1")
 
 [node name="ChickenCoopProjectile" type="Node2D" unique_id=1814773508]
@@ -29,7 +28,6 @@ position = Vector2(206, 292)
 emitting = false
 amount = 40
 texture = ExtResource("1_nkqgs")
-lifetime = 0.75
 one_shot = true
 explosiveness = 1.0
 process_material = SubResource("ParticleProcessMaterial_dq4ji")

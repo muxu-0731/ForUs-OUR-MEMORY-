@@ -5,11 +5,20 @@ using System.Text.Json;
 
 public partial class GlobalScript : Node
 {
+    public const int MaxPartySize = 4;
+
     private const string EvilRabbitJsonPath = "res://character_data/evil_rabbit.json";
     private const string TakeawayCatJsonPath = "res://character_data/takeaway_cat.json";
     private const string ChickenJsonPath = "res://character_data/chicken.json";
     private const string AppleQueenJsonPath = "res://character_data/apple_queen.json";
     private const string MiaminJsonPath = "res://character_data/miamin.json";
+    private static readonly string[] DefaultSelectedTeamJsonPaths =
+    {
+        AppleQueenJsonPath,
+        ChickenJsonPath,
+        EvilRabbitJsonPath,
+        TakeawayCatJsonPath
+    };
 
     private static readonly JsonSerializerOptions CharacterJsonOptions = new JsonSerializerOptions
     {
@@ -336,15 +345,37 @@ public partial class GlobalScript : Node
 
     public void EnsureDefaultSelectedTeam()
     {
-        if (SelectedTeam.Count == 3)
+        if (SelectedTeam.Count == MaxPartySize)
         {
             return;
         }
 
+        BuildDefaultSelectedTeam();
+    }
+
+    private void BuildDefaultSelectedTeam()
+    {
         SelectedTeam.Clear();
-        SelectedTeam.Add(new SelectedCharacterData("外卖猫", "res://character_picture/deliverycat.png"));
-        SelectedTeam.Add(new SelectedCharacterData("邪恶兔", "res://character_picture/evilrabbit.png"));
-        SelectedTeam.Add(new SelectedCharacterData("小鸡", "res://character_picture/chicken.png"));
+
+        foreach (string jsonPath in DefaultSelectedTeamJsonPaths)
+        {
+            var unit = LoadCharacterFromJson(jsonPath);
+            if (unit == null || string.IsNullOrWhiteSpace(unit.UnitName) || string.IsNullOrWhiteSpace(unit.TexturePath))
+            {
+                continue;
+            }
+
+            if (SelectedTeam.Exists(character => character.CharacterName == unit.UnitName))
+            {
+                continue;
+            }
+
+            SelectedTeam.Add(new SelectedCharacterData(unit.UnitName, unit.TexturePath));
+            if (SelectedTeam.Count >= MaxPartySize)
+            {
+                break;
+            }
+        }
     }
 
     public void ResetBattleFromSelectedTeam()
@@ -369,13 +400,36 @@ public partial class GlobalScript : Node
 
     private void ApplySelectedTeamToPlayerTeam()
     {
-        if (SelectedTeam.Count != 3 || PlayerTeam.Count == 0)
+        if (PlayerTeam.Count == 0)
         {
             return;
         }
 
+        if (!TryCreateOrderedSelectedTeam(out var orderedTeam))
+        {
+            GD.PrintErr("SelectedTeam 无效，将回退到默认四人队伍。");
+            BuildDefaultSelectedTeam();
+
+            if (!TryCreateOrderedSelectedTeam(out orderedTeam))
+            {
+                GD.PrintErr("默认四人队伍构建失败，无法应用出战队伍。");
+                return;
+            }
+        }
+
+        PlayerTeam = orderedTeam;
+    }
+
+    private bool TryCreateOrderedSelectedTeam(out List<BattleUnit> orderedTeam)
+    {
         var templates = new Dictionary<string, BattleUnit>();
-        var orderedTeam = new List<BattleUnit>();
+        var selectedNames = new HashSet<string>();
+        orderedTeam = new List<BattleUnit>();
+
+        if (SelectedTeam.Count != MaxPartySize)
+        {
+            return false;
+        }
 
         foreach (var template in PlayerTeam)
         {
@@ -387,19 +441,26 @@ public partial class GlobalScript : Node
 
         foreach (var selectedCharacter in SelectedTeam)
         {
+            if (selectedCharacter == null || string.IsNullOrWhiteSpace(selectedCharacter.CharacterName))
+            {
+                return false;
+            }
+
+            if (!selectedNames.Add(selectedCharacter.CharacterName))
+            {
+                return false;
+            }
+
             if (!templates.TryGetValue(selectedCharacter.CharacterName, out var templateUnit))
             {
                 GD.PrintErr($"未找到已加载的角色模板：{selectedCharacter.CharacterName}");
-                continue;
+                return false;
             }
 
             orderedTeam.Add(CloneBattleUnit(templateUnit, selectedCharacter.TexturePath));
         }
 
-        if (orderedTeam.Count == 3)
-        {
-            PlayerTeam = orderedTeam;
-        }
+        return orderedTeam.Count == MaxPartySize;
     }
 
     private void InitializeReusableStatusSystems()
