@@ -79,6 +79,16 @@ public partial class EnergyBar : Control
         UpdateEnergyBarLayout();
     }
 
+    public void RefreshLayout()
+    {
+        if (!IsInsideTree())
+        {
+            return;
+        }
+
+        UpdateEnergyBarLayout();
+    }
+
     public override void _Draw()
     {
         if (_maxEnergy <= 0)
@@ -158,12 +168,14 @@ public partial class EnergyBar : Control
             Mathf.Max(Mathf.Abs(sprite.Scale.X), 0.001f),
             Mathf.Max(Mathf.Abs(sprite.Scale.Y), 0.001f));
         Rect2 displayBounds = ResolveDisplayBounds(sprite);
+        Vector2 uiOffset = ResolveAttachedUiScreenOffset();
 
         // Keep the energy bar at a fixed screen size while anchoring it to the sprite's visual bounds.
         Scale = new Vector2(1f / safeScale.X, 1f / safeScale.Y);
         Position = new Vector2(
             displayBounds.Position.X + displayBounds.Size.X + EnergyMargin / safeScale.X,
-            displayBounds.Position.Y + (displayBounds.Size.Y - contentHeight / safeScale.Y) * 0.5f);
+            displayBounds.Position.Y + (displayBounds.Size.Y - contentHeight / safeScale.Y) * 0.5f)
+            + new Vector2(uiOffset.X / safeScale.X, uiOffset.Y / safeScale.Y);
     }
 
     private Rect2 ResolveDisplayBounds(Sprite2D sprite)
@@ -176,5 +188,15 @@ public partial class EnergyBar : Control
         Vector2 textureSize = sprite.Texture.GetSize();
         Vector2 drawOrigin = -textureSize * 0.5f + sprite.Offset;
         return new Rect2(drawOrigin, textureSize);
+    }
+
+    private Vector2 ResolveAttachedUiScreenOffset()
+    {
+        if (GetParent() is Player player)
+        {
+            return player.AttachedUiScreenOffset;
+        }
+
+        return Vector2.Zero;
     }
 }

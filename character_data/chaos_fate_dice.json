@@ -1,0 +1,64 @@
+{
+  "UnitName": "无序命骰",
+  "TexturePath": "res://character_picture/Chaos_Fate_Dice.png",
+  "PortraitPath": "res://Portraits/Chaos_Fate_Dice_Portraits.png",
+
+  "SelectCardPortraitCrop": {
+    "SourcePath": "res://Portraits/Chaos_Fate_Dice_Portraits.png",
+    "X": 70,
+    "Y": 260,
+    "Width": 884,
+    "Height": 596,
+    "FitMode": "CropToCard"
+  },
+
+  "Hp": 160,
+  "HpMax": 160,
+  "Attack": 8,
+  "CritRate": 0.15,
+  "CritDamage": 1.5,
+  "major": "命理",
+  "IsPlayerUnit": true,
+  "MaxEnergy": 80,
+  "Skills": [
+    {
+      "SkillId": "chaos_fate_dice_passive",
+      "SkillName": "日常无序的桌游",
+      "Description": "无序命骰的生命值上升或下降时，都会使自身获得1点【有序值】。每点【有序值】提高自身5%暴击率与8%暴击伤害，最多获得6点【有序值】。【有序值】不会自然消失。",
+      "Type": "Passive",
+      "EnergyCost": 0
+    },
+    {
+      "SkillId": "chaos_fate_dice_normal",
+      "SkillName": "掷骰",
+      "Description": "对目标造成【5%自身最大生命值】的伤害。",
+      "Type": "Normal",
+      "EnergyCost": -10
+    },
+    {
+      "SkillId": "chaos_fate_dice_special",
+      "SkillName": "押注",
+      "Description": "释放后，无序命骰消耗自身【5%自身当前生命值】。有80%基础概率对选中的单个敌人造成【20%自身最大生命值】的伤害；有20%基础概率改为对选中敌人释放【强化特殊技能：稳稳拿下！】。每有1点【有序值】，提高10%【强化特殊技能：稳稳拿下！】的释放概率，降低10%【特殊技能：押注】的释放概率。",
+      "Type": "Special",
+      "EnergyCost": -40,
+      "EnhancedSkillId": "chaos_fate_dice_enhanced_special"
+    },
+    {
+      "SkillId": "chaos_fate_dice_enhanced_special",
+      "SkillName": "稳稳拿下！",
+      "Description": "对选中的单个敌人造成【40%自身最大生命值】的伤害。随后清空所有【有序值】，每清空1点，提高所有友方角色【10%暴击伤害】，持续最多三个回合。每名友方角色通过该技能提高的暴击伤害不超过100%。",
+      "Type": "EnhancedSpecial",
+      "EnergyCost": 0,
+      "IsSelectable": false,
+      "ShowInBattleUi": false,
+      "TriggeredBySkillId": "chaos_fate_dice_special"
+    },
+    {
+      "SkillId": "chaos_fate_dice_ult",
+      "SkillName": "命数归零的终局",
+      "Description": "消耗全体友方角色各15%当前生命值，立即获得6点【有序值】。随后对所有敌人造成【25%自身最大生命值】的伤害。",
+      "Type": "Ultimate",
+      "EnergyCost": 80
+    }
+  ]
+}

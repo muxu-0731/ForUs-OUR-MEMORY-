@@ -1,0 +1,391 @@
+[gd_scene format=3 uid="uid://j5hk1ssft6s5"]
+
+[ext_resource type="Script" path="res://Scripts/UI/CharacterSelectSceneController.cs" id="1_f5u25"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_umjq2"]
+bg_color = Color(0.02745098, 0.06666667, 0.12156863, 0.8)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.49411765, 0.8627451, 1, 0.53333336)
+corner_radius_top_left = 10
+corner_radius_top_right = 10
+corner_radius_bottom_right = 10
+corner_radius_bottom_left = 10
+corner_detail = 10
+
+[sub_resource type="LabelSettings" id="LabelSettings_sk7s0"]
+font_size = 46
+font_color = Color(0.9647059, 0.98039216, 1, 1)
+
+[sub_resource type="LabelSettings" id="LabelSettings_shfws"]
+font_size = 18
+font_color = Color(0.65882355, 0.78039217, 0.9098039, 1)
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_sk7s0"]
+bg_color = Color(0.043137256, 0.08627451, 0.15686275, 0.8666667)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.49411765, 0.8627451, 1, 0.53333336)
+corner_radius_top_left = 8
+corner_radius_top_right = 8
+corner_radius_bottom_right = 8
+corner_radius_bottom_left = 8
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_shfws"]
+bg_color = Color(0.007843138, 0.03137255, 0.09019608, 0.6666667)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(0.9490196, 0.827451, 0.5411765, 0.4)
+corner_radius_top_left = 6
+corner_radius_top_right = 6
+corner_radius_bottom_right = 6
+corner_radius_bottom_left = 6
+
+[sub_resource type="LabelSettings" id="LabelSettings_srmn1"]
+font_size = 25
+font_color = Color(0.9647059, 0.98039216, 1, 1)
+
+[sub_resource type="LabelSettings" id="LabelSettings_el4vq"]
+font_size = 17
+font_color = Color(0.49411765, 0.8627451, 1, 1)
+
+[sub_resource type="LabelSettings" id="LabelSettings_i0t4g"]
+font_size = 14
+font_color = Color(0.65882355, 0.78039217, 0.9098039, 1)
+
+[sub_resource type="LabelSettings" id="LabelSettings_31rp8"]
+font_size = 20
+font_color = Color(0.9647059, 0.98039216, 1, 1)
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_srmn1"]
+bg_color = Color(0.02745098, 0.06666667, 0.12156863, 0.8)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.49411765, 0.8627451, 1, 0.53333336)
+corner_radius_top_left = 10
+corner_radius_top_right = 10
+corner_radius_bottom_right = 10
+corner_radius_bottom_left = 10
+corner_detail = 10
+
+[sub_resource type="LabelSettings" id="LabelSettings_umjq2"]
+font_size = 32
+font_color = Color(0.9647059, 0.98039216, 1, 1)
+
+[sub_resource type="LabelSettings" id="LabelSettings_gjvaj"]
+font_color = Color(0.65882355, 0.78039217, 0.9098039, 1)
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_31rp8"]
+bg_color = Color(0.043137256, 0.08627451, 0.15686275, 0.6666667)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(0.49411765, 0.8627451, 1, 0.26666668)
+corner_radius_top_left = 6
+corner_radius_top_right = 6
+corner_radius_bottom_right = 6
+corner_radius_bottom_left = 6
+
+[node name="CharacterSelectScene" type="Control" unique_id=1904265895]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+size_flags_horizontal = 4
+script = ExtResource("1_f5u25")
+
+[node name="StarBackground" type="ColorRect" parent="." unique_id=1408693369]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0.019607844, 0.043137256, 0.09411765, 1)
+
+[node name="BackgroundImage" type="TextureRect" parent="." unique_id=1522685725]
+modulate = Color(1, 1, 1, 0.33333334)
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+stretch_mode = 6
+
+[node name="DarkOverlay" type="ColorRect" parent="." unique_id=485247417]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+color = Color(0, 0, 0, 0.4)
+
+[node name="SafeArea" type="MarginContainer" parent="." unique_id=1863080725]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/margin_left = 44
+theme_override_constants/margin_top = 44
+theme_override_constants/margin_right = 30
+theme_override_constants/margin_bottom = 30
+
+[node name="MainHBox" type="HBoxContainer" parent="SafeArea" unique_id=69126906]
+layout_mode = 2
+theme_override_constants/separation = 28
+
+[node name="LeftPanel" type="PanelContainer" parent="SafeArea/MainHBox" unique_id=462122866]
+custom_minimum_size = Vector2(760, 0)
+layout_mode = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_umjq2")
+
+[node name="LeftMargin" type="MarginContainer" parent="SafeArea/MainHBox/LeftPanel" unique_id=812286261]
+layout_mode = 2
+
+[node name="LeftVBox" type="VBoxContainer" parent="SafeArea/MainHBox/LeftPanel/LeftMargin" unique_id=1467564107]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+
+[node name="Header" type="HBoxContainer" parent="SafeArea/MainHBox/LeftPanel/LeftMargin/LeftVBox" unique_id=1452688708]
+layout_mode = 2
+
+[node name="TitleBox" type="VBoxContainer" parent="SafeArea/MainHBox/LeftPanel/LeftMargin/LeftVBox/Header" unique_id=464115331]
+layout_mode = 2
+
+[node name="TitleLabel" type="Label" parent="SafeArea/MainHBox/LeftPanel/LeftMargin/LeftVBox/Header/TitleBox" unique_id=1458391601]
+layout_mode = 2
+text = "拾忆织卷"
+label_settings = SubResource("LabelSettings_sk7s0")
+
+[node name="SubTitleLabel" type="Label" parent="SafeArea/MainHBox/LeftPanel/LeftMargin/LeftVBox/Header/TitleBox" unique_id=677322425]
+layout_mode = 2
+text = "自记忆深处唤醒四位同行者，编织宿命的攻防"
+label_settings = SubResource("LabelSettings_shfws")
+
+[node name="BackButton" type="Button" parent="SafeArea/MainHBox/LeftPanel/LeftMargin/LeftVBox/Header" unique_id=757593382]
+custom_minimum_size = Vector2(96, 42)
+layout_mode = 2
+text = "返回"
+
+[node name="DividerLine" type="ColorRect" parent="SafeArea/MainHBox/LeftPanel/LeftMargin/LeftVBox" unique_id=1533511504]
+custom_minimum_size = Vector2(0, 2)
+layout_mode = 2
+color = Color(0.49411765, 0.8627451, 1, 0.4)
+
+[node name="CharacterScroll" type="ScrollContainer" parent="SafeArea/MainHBox/LeftPanel/LeftMargin/LeftVBox" unique_id=1499744022]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+
+[node name="CharacterGrid" type="GridContainer" parent="SafeArea/MainHBox/LeftPanel/LeftMargin/LeftVBox/CharacterScroll" unique_id=1946809911]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+theme_override_constants/h_separation = 18
+theme_override_constants/v_separation = 18
+columns = 3
+
+[node name="CardTemplate" type="PanelContainer" parent="SafeArea/MainHBox/LeftPanel/LeftMargin/LeftVBox/CharacterScroll/CharacterGrid" unique_id=1101302763]
+custom_minimum_size = Vector2(220, 285)
+layout_mode = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_sk7s0")
+
+[node name="CardMargin" type="MarginContainer" parent="SafeArea/MainHBox/LeftPanel/LeftMargin/LeftVBox/CharacterScroll/CharacterGrid/CardTemplate" unique_id=1761322409]
+layout_mode = 2
+theme_override_constants/margin_left = 12
+theme_override_constants/margin_top = 12
+theme_override_constants/margin_right = 12
+theme_override_constants/margin_bottom = 12
+
+[node name="CardVBox" type="VBoxContainer" parent="SafeArea/MainHBox/LeftPanel/LeftMargin/LeftVBox/CharacterScroll/CharacterGrid/CardTemplate/CardMargin" unique_id=360476354]
+visible = false
+layout_mode = 2
+
+[node name="PortraitFrame" type="PanelContainer" parent="SafeArea/MainHBox/LeftPanel/LeftMargin/LeftVBox/CharacterScroll/CharacterGrid/CardTemplate/CardMargin/CardVBox" unique_id=440251953]
+custom_minimum_size = Vector2(196, 135)
+layout_mode = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_shfws")
+
+[node name="Portrait" type="TextureRect" parent="SafeArea/MainHBox/LeftPanel/LeftMargin/LeftVBox/CharacterScroll/CharacterGrid/CardTemplate/CardMargin/CardVBox/PortraitFrame" unique_id=1021036593]
+layout_mode = 2
+expand_mode = 3
+stretch_mode = 5
+
+[node name="NameLabel" type="Label" parent="SafeArea/MainHBox/LeftPanel/LeftMargin/LeftVBox/CharacterScroll/CharacterGrid/CardTemplate/CardMargin/CardVBox" unique_id=2136710870]
+layout_mode = 2
+text = "无序命骰"
+label_settings = SubResource("LabelSettings_srmn1")
+horizontal_alignment = 1
+
+[node name="MajorLabel" type="Label" parent="SafeArea/MainHBox/LeftPanel/LeftMargin/LeftVBox/CharacterScroll/CharacterGrid/CardTemplate/CardMargin/CardVBox" unique_id=743934351]
+layout_mode = 2
+text = "主修：命理"
+label_settings = SubResource("LabelSettings_el4vq")
+horizontal_alignment = 1
+
+[node name="StatHintLabel" type="Label" parent="SafeArea/MainHBox/LeftPanel/LeftMargin/LeftVBox/CharacterScroll/CharacterGrid/CardTemplate/CardMargin/CardVBox" unique_id=817747617]
+layout_mode = 2
+text = "HP 160 / ATK 8 / EN 80"
+label_settings = SubResource("LabelSettings_i0t4g")
+horizontal_alignment = 1
+
+[node name="CardButtons" type="HBoxContainer" parent="SafeArea/MainHBox/LeftPanel/LeftMargin/LeftVBox/CharacterScroll/CharacterGrid/CardTemplate/CardMargin/CardVBox" unique_id=660119919]
+layout_mode = 2
+theme_override_constants/separation = 8
+alignment = 1
+
+[node name="SelectButton" type="Button" parent="SafeArea/MainHBox/LeftPanel/LeftMargin/LeftVBox/CharacterScroll/CharacterGrid/CardTemplate/CardMargin/CardVBox/CardButtons" unique_id=1214076889]
+custom_minimum_size = Vector2(84, 34)
+layout_mode = 2
+text = "选择"
+
+[node name="DetailButton" type="Button" parent="SafeArea/MainHBox/LeftPanel/LeftMargin/LeftVBox/CharacterScroll/CharacterGrid/CardTemplate/CardMargin/CardVBox/CardButtons" unique_id=1674176583]
+custom_minimum_size = Vector2(84, 34)
+layout_mode = 2
+text = "详情"
+
+[node name="PageBar" type="HBoxContainer" parent="SafeArea/MainHBox/LeftPanel/LeftMargin/LeftVBox" unique_id=1322139180]
+layout_mode = 2
+theme_override_constants/separation = 16
+alignment = 1
+
+[node name="PrevPageButton" type="Button" parent="SafeArea/MainHBox/LeftPanel/LeftMargin/LeftVBox/PageBar" unique_id=739555676]
+custom_minimum_size = Vector2(110, 40)
+layout_mode = 2
+text = "上一页"
+
+[node name="PageLabel" type="Label" parent="SafeArea/MainHBox/LeftPanel/LeftMargin/LeftVBox/PageBar" unique_id=916363789]
+layout_mode = 2
+text = "1 / 1"
+label_settings = SubResource("LabelSettings_31rp8")
+
+[node name="NextPageButton" type="Button" parent="SafeArea/MainHBox/LeftPanel/LeftMargin/LeftVBox/PageBar" unique_id=170559690]
+custom_minimum_size = Vector2(110, 40)
+layout_mode = 2
+text = "下一页"
+
+[node name="RightPanel" type="PanelContainer" parent="SafeArea/MainHBox" unique_id=436551998]
+custom_minimum_size = Vector2(300, 0)
+layout_mode = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_srmn1")
+
+[node name="RightMargin" type="MarginContainer" parent="SafeArea/MainHBox/RightPanel" unique_id=185999608]
+layout_mode = 2
+
+[node name="RightVBox" type="VBoxContainer" parent="SafeArea/MainHBox/RightPanel/RightMargin" unique_id=1225579381]
+layout_mode = 2
+
+[node name="TeamTitleLabel" type="Label" parent="SafeArea/MainHBox/RightPanel/RightMargin/RightVBox" unique_id=773889000]
+layout_mode = 2
+text = "同调阵列"
+label_settings = SubResource("LabelSettings_umjq2")
+horizontal_alignment = 1
+
+[node name="TeamSubTitleLabel" type="Label" parent="SafeArea/MainHBox/RightPanel/RightMargin/RightVBox" unique_id=1236058999]
+layout_mode = 2
+text = "至多唤醒 4 位同行者"
+label_settings = SubResource("LabelSettings_gjvaj")
+horizontal_alignment = 1
+
+[node name="TeamSlots" type="VBoxContainer" parent="SafeArea/MainHBox/RightPanel/RightMargin/RightVBox" unique_id=1698257700]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="Slot1" type="PanelContainer" parent="SafeArea/MainHBox/RightPanel/RightMargin/RightVBox/TeamSlots" unique_id=1055731904]
+layout_mode = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_31rp8")
+
+[node name="SlotMargin" type="MarginContainer" parent="SafeArea/MainHBox/RightPanel/RightMargin/RightVBox/TeamSlots/Slot1" unique_id=2070030944]
+layout_mode = 2
+
+[node name="SlotVBox" type="VBoxContainer" parent="SafeArea/MainHBox/RightPanel/RightMargin/RightVBox/TeamSlots/Slot1/SlotMargin" unique_id=769718767]
+layout_mode = 2
+
+[node name="SlotNameLabel" type="Label" parent="SafeArea/MainHBox/RightPanel/RightMargin/RightVBox/TeamSlots/Slot1/SlotMargin/SlotVBox" unique_id=503003389]
+layout_mode = 2
+text = "1.空位"
+
+[node name="SlotMajorLabel" type="Label" parent="SafeArea/MainHBox/RightPanel/RightMargin/RightVBox/TeamSlots/Slot1/SlotMargin/SlotVBox" unique_id=312176277]
+layout_mode = 2
+text = "等待唤醒"
+
+[node name="Slot2" type="PanelContainer" parent="SafeArea/MainHBox/RightPanel/RightMargin/RightVBox/TeamSlots" unique_id=867165212]
+layout_mode = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_31rp8")
+
+[node name="SlotMargin" type="MarginContainer" parent="SafeArea/MainHBox/RightPanel/RightMargin/RightVBox/TeamSlots/Slot2" unique_id=1011030500]
+layout_mode = 2
+
+[node name="SlotVBox" type="VBoxContainer" parent="SafeArea/MainHBox/RightPanel/RightMargin/RightVBox/TeamSlots/Slot2/SlotMargin" unique_id=2068976613]
+layout_mode = 2
+
+[node name="SlotNameLabel" type="Label" parent="SafeArea/MainHBox/RightPanel/RightMargin/RightVBox/TeamSlots/Slot2/SlotMargin/SlotVBox" unique_id=2042023099]
+layout_mode = 2
+text = "1.空位"
+
+[node name="SlotMajorLabel" type="Label" parent="SafeArea/MainHBox/RightPanel/RightMargin/RightVBox/TeamSlots/Slot2/SlotMargin/SlotVBox" unique_id=729376635]
+layout_mode = 2
+text = "等待唤醒"
+
+[node name="Slot3" type="PanelContainer" parent="SafeArea/MainHBox/RightPanel/RightMargin/RightVBox/TeamSlots" unique_id=1317000255]
+layout_mode = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_31rp8")
+
+[node name="SlotMargin" type="MarginContainer" parent="SafeArea/MainHBox/RightPanel/RightMargin/RightVBox/TeamSlots/Slot3" unique_id=1403294272]
+layout_mode = 2
+
+[node name="SlotVBox" type="VBoxContainer" parent="SafeArea/MainHBox/RightPanel/RightMargin/RightVBox/TeamSlots/Slot3/SlotMargin" unique_id=849603689]
+layout_mode = 2
+
+[node name="SlotNameLabel" type="Label" parent="SafeArea/MainHBox/RightPanel/RightMargin/RightVBox/TeamSlots/Slot3/SlotMargin/SlotVBox" unique_id=870087654]
+layout_mode = 2
+text = "1.空位"
+
+[node name="SlotMajorLabel" type="Label" parent="SafeArea/MainHBox/RightPanel/RightMargin/RightVBox/TeamSlots/Slot3/SlotMargin/SlotVBox" unique_id=322234618]
+layout_mode = 2
+text = "等待唤醒"
+
+[node name="Slot4" type="PanelContainer" parent="SafeArea/MainHBox/RightPanel/RightMargin/RightVBox/TeamSlots" unique_id=1832827741]
+layout_mode = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_31rp8")
+
+[node name="SlotMargin" type="MarginContainer" parent="SafeArea/MainHBox/RightPanel/RightMargin/RightVBox/TeamSlots/Slot4" unique_id=2067109965]
+layout_mode = 2
+
+[node name="SlotVBox" type="VBoxContainer" parent="SafeArea/MainHBox/RightPanel/RightMargin/RightVBox/TeamSlots/Slot4/SlotMargin" unique_id=2001275185]
+layout_mode = 2
+
+[node name="SlotNameLabel" type="Label" parent="SafeArea/MainHBox/RightPanel/RightMargin/RightVBox/TeamSlots/Slot4/SlotMargin/SlotVBox" unique_id=204107592]
+layout_mode = 2
+text = "1.空位"
+
+[node name="SlotMajorLabel" type="Label" parent="SafeArea/MainHBox/RightPanel/RightMargin/RightVBox/TeamSlots/Slot4/SlotMargin/SlotVBox" unique_id=1016356046]
+layout_mode = 2
+text = "等待唤醒"
+
+[node name="ConfirmButton" type="Button" parent="SafeArea/MainHBox/RightPanel/RightMargin/RightVBox" unique_id=901003571]
+custom_minimum_size = Vector2(0, 48)
+layout_mode = 2
+text = "确认唤醒"
+
+[node name="ClearButton" type="Button" parent="SafeArea/MainHBox/RightPanel/RightMargin/RightVBox" unique_id=1111269577]
+custom_minimum_size = Vector2(0, 44)
+layout_mode = 2
+text = "重置阵列"

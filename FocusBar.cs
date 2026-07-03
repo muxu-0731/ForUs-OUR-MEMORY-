@@ -6,7 +6,7 @@ public partial class FocusBar : Control
     private const float DotRadius = 17.5f;
     private const float DotSpacing = 12f;
 
-    private static readonly Color ActiveColor = new Color("#4A90E2");
+    private static readonly Color ActiveColor = new Color("#FFD54A");
     private static readonly Color InactiveColor = new Color("#333333");
 
     private int _lastFocusValue = -1;

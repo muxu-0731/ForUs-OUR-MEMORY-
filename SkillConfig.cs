@@ -1,3 +1,5 @@
+using System.Collections.Generic;
+using System.Text.Json;
 using System.Text.Json.Serialization;
 
 public class SkillConfig
@@ -16,4 +18,19 @@ public class SkillConfig
 
     [JsonPropertyName("EnergyCost")]
     public int EnergyCost { get; set; }
+
+    [JsonPropertyName("EnhancedSkillId")]
+    public string EnhancedSkillId { get; set; } = null;
+
+    [JsonPropertyName("IsSelectable")]
+    public bool IsSelectable { get; set; } = true;
+
+    [JsonPropertyName("ShowInBattleUi")]
+    public bool ShowInBattleUi { get; set; } = true;
+
+    [JsonPropertyName("TriggeredBySkillId")]
+    public string TriggeredBySkillId { get; set; } = null;
+
+    [JsonExtensionData]
+    public Dictionary<string, JsonElement> AdditionalFields { get; set; } = new();
 }

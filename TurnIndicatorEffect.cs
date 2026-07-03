@@ -5,10 +5,13 @@ public partial class TurnIndicatorEffect : Node2D
     private float _time = 0f;
     private float _radius = 65f;
     private float _rotationSpeed = 1.2f;
+    private Node2D _trackedNode;
 
-    public void Configure(float radius)
+    public void Configure(Node2D trackedNode, float radius)
     {
+        _trackedNode = trackedNode;
         _radius = Mathf.Max(radius, 24f);
+        UpdateTrackedPosition();
         QueueRedraw();
     }
 
@@ -23,6 +26,7 @@ public partial class TurnIndicatorEffect : Node2D
     {
         _time += (float)delta;
         Rotation += _rotationSpeed * (float)delta;
+        UpdateTrackedPosition();
         QueueRedraw();
     }
 
@@ -44,5 +48,28 @@ public partial class TurnIndicatorEffect : Node2D
             Vector2 dir = new Vector2(Mathf.Cos(angle), Mathf.Sin(angle));
             DrawCircle(dir * currentRadius, 5f, dotColor);
         }
+    }
+
+    private void UpdateTrackedPosition()
+    {
+        if (!GodotObject.IsInstanceValid(_trackedNode) || !_trackedNode.IsInsideTree())
+        {
+            QueueFree();
+            return;
+        }
+
+        if (_trackedNode is Player player)
+        {
+            GlobalPosition = player.GetSelectionAnchorGlobal();
+            return;
+        }
+
+        if (_trackedNode is Enemy enemy)
+        {
+            GlobalPosition = enemy.GetSelectionAnchorGlobal();
+            return;
+        }
+
+        GlobalPosition = _trackedNode.GlobalPosition;
     }
 }

@@ -1,0 +1,95 @@
+{
+  "UnitName": "帷隙之眼",
+  "TexturePath": "res://enemy_picture/WeiXiZhiYan.png",
+  "Hp": 1000,
+  "HpMax": 1000,
+  "Attack": 100,
+  "IsPlayerUnit": false,
+  "BattleConfig": {
+    "TurnBehavior": "RandomAvailableSkill",
+    "HasEnergy": false,
+    "HasFocus": false,
+    "EntrySkillId": "curtain_gap_eye_accomplice"
+  },
+  "Skills": [
+    {
+      "SkillId": "curtain_gap_eye_peek_screen",
+      "SkillName": "窥屏",
+      "Description": "对一名随机敌人造成【30%攻击力】的伤害。",
+      "Type": "BossSkill",
+      "EnergyCost": 0,
+      "CanRandomCast": true,
+      "TargetType": "RandomEnemy",
+      "EffectData": {
+        "DamageBase": "Attack",
+        "DamageMultiplier": 0.3
+      }
+    },
+    {
+      "SkillId": "curtain_gap_eye_accomplice",
+      "SkillName": "共犯者",
+      "Description": "召唤两个【窥视者】。场上存在【窥视者】时，无法释放该技能。该技能在战斗开始时、玩家回合之前自动释放一次；随后进入正常战斗流程。战斗过程中，若场上不存在【窥视者】，该技能也可被随机释放。",
+      "Type": "EntrySkill",
+      "EnergyCost": 0,
+      "IsEntrySkill": true,
+      "CanRandomCast": true,
+      "CastCondition": {
+        "NoAliveUnitWithUnitId": "watcher"
+      },
+      "EffectData": {
+        "SummonUnitId": "watcher",
+        "SummonCount": 2
+      }
+    },
+    {
+      "SkillId": "curtain_gap_eye_phone_snooping",
+      "SkillName": "乱翻别人手机",
+      "Description": "对一名随机敌人造成【10%攻击力】的伤害。使该敌人成为【窥屏目标】，持续三个回合。【窥屏目标】受到的伤害提高50%，且其受击概率大幅提高。",
+      "Type": "BossSkill",
+      "EnergyCost": 0,
+      "CanRandomCast": true,
+      "TargetType": "RandomEnemy",
+      "EffectData": {
+        "DamageBase": "Attack",
+        "DamageMultiplier": 0.1,
+        "ApplyBuff": {
+          "BuffId": "peek_screen_target",
+          "BuffName": "窥屏目标",
+          "DurationTurns": 3,
+          "DamageTakenMultiplier": 1.5,
+          "TargetWeightMultiplier": 5.0,
+          "RefreshOnReapply": true
+        }
+      }
+    },
+    {
+      "SkillId": "curtain_gap_eye_beautiful_selfie",
+      "SkillName": "来张美美自拍吧",
+      "Description": "对一名随机敌人造成【50%攻击力】的伤害。",
+      "Type": "BossSkill",
+      "EnergyCost": 0,
+      "CanRandomCast": true,
+      "TargetType": "RandomEnemy",
+      "EffectData": {
+        "DamageBase": "Attack",
+        "DamageMultiplier": 0.5
+      }
+    },
+    {
+      "SkillId": "curtain_gap_eye_birds_of_a_feather",
+      "SkillName": "一丘之貉",
+      "Description": "消灭场上所有【窥视者】。每消灭一个【窥视者】，恢复【5%自身最大生命值】的生命。",
+      "Type": "BossSkill",
+      "EnergyCost": 0,
+      "CanRandomCast": true,
+      "CastCondition": {
+        "MinAliveUnitWithUnitId": "watcher",
+        "MinCount": 1
+      },
+      "EffectData": {
+        "ConsumeAllUnitWithUnitId": "watcher",
+        "HealPercentOfSelfMaxHpPerConsumedUnit": 0.05
+      }
+    }
+  ]
+}

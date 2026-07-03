@@ -1,9 +1,12 @@
 using Godot;
 using System;
+using System.Text;
 
 public partial class Ui : Control
 {
     public static Ui Instance { get; private set; }
+    private const float DefaultActionEndDelaySeconds = 1.0f;
+    private const float CoopAttackActionEndDelaySeconds = 0.05f;
 
     // UI节点
     private Button _skillButton;
@@ -137,6 +140,7 @@ public partial class Ui : Control
         if (isPlayerTurn && global.CurrentActingUnit != null && !global.CurrentActingUnit.IsDead)
         {
             RefreshAttrLabel(global.CurrentActingUnit);
+            AppendChaosExtraAttrLabel(global.CurrentActingUnit);
         }
     }
 
@@ -164,19 +168,20 @@ public partial class Ui : Control
         {
             _attrLabel.Visible = true;
             RefreshAttrLabel(playerUnit);
+            AppendChaosExtraAttrLabel(playerUnit);
         }
 
         // 提取当前角色的技能
         _currentPassive = playerUnit.Skills.Find(s => s.Type == GlobalScript.SkillType.Passive);
-        _currentNormal = playerUnit.Skills.Find(s => s.Type == GlobalScript.SkillType.Normal);
-        _currentSpecial = playerUnit.Skills.Find(s => s.Type == GlobalScript.SkillType.Special);
-        _currentUltimate = playerUnit.Skills.Find(s => s.Type == GlobalScript.SkillType.Ultimate);
+        _currentNormal = FindBattleSkill(playerUnit, GlobalScript.SkillType.Normal);
+        _currentSpecial = FindBattleSkill(playerUnit, GlobalScript.SkillType.Special);
+        _currentUltimate = FindBattleSkill(playerUnit, GlobalScript.SkillType.Ultimate);
 
         // 更新按钮文本
-        if (_passiveBtn != null && _currentPassive != null) _passiveBtn.Text = _currentPassive.SkillName;
-        if (_normalAttackBtn != null && _currentNormal != null) _normalAttackBtn.Text = _currentNormal.SkillName;
-        if (_specialSkillBtn != null && _currentSpecial != null) _specialSkillBtn.Text = _currentSpecial.SkillName;
-        if (_ultimateBtn != null && _currentUltimate != null) _ultimateBtn.Text = _currentUltimate.SkillName;
+        UpdatePassiveButton(_passiveBtn, _currentPassive);
+        UpdateSkillButton(_normalAttackBtn, _currentNormal);
+        UpdateSkillButton(_specialSkillBtn, _currentSpecial);
+        UpdateSkillButton(_ultimateBtn, _currentUltimate);
 
         // 更新回合提示
         if (_battleTipLabel != null)
@@ -186,6 +191,21 @@ public partial class Ui : Control
     }
 
     // 新敌人登场时调用（原有不变）
+    public void OnTurnStartStatusResolve(GlobalScript.BattleUnit unit)
+    {
+        _currentPlayerHasActed = false;
+        _isResolvingSkill = false;
+
+        if (_skillsContainer != null) _skillsContainer.Visible = false;
+        if (_skillTooltip != null) _skillTooltip.Hide();
+        if (_attrLabel != null) _attrLabel.Visible = false;
+
+        if (_battleTipLabel != null && unit != null)
+        {
+            _battleTipLabel.Text = $"{unit.UnitName} 的持续伤害结算中...";
+        }
+    }
+
     public void BroadcastSkillName(string skillName, bool isPlayerTurn)
     {
         if (_skillNotifier == null || _notifierLabel == null || string.IsNullOrWhiteSpace(skillName))
@@ -277,6 +297,12 @@ public partial class Ui : Control
         BroadcastSkillName(_currentNormal.SkillName, true);
 
         var caster = global.CurrentActingUnit;
+        if (global.IsChaosFateDice(caster))
+        {
+            await ExecuteChaosFateDiceNormalAttack(global, caster);
+            return;
+        }
+
         var enemies = global.GetAliveEnemies();
         if (enemies.Count == 0)
         {
@@ -342,13 +368,24 @@ public partial class Ui : Control
             await global.TriggerCoopAttack(target);
         }
 
-        FinishTurnConsumingAction(global);
+        FinishTurnConsumingAction(global, usedCoopAttack: caster.UnitName != "灏忛浮");
     }
 
     private async void OnSpecialSkillCast()
     {
         var global = GlobalScript.Instance;
         if (!CanCastSkill(global) || _currentSpecial == null) return;
+
+        var caster = global.CurrentActingUnit;
+        if (global.IsChaosFateDice(caster))
+        {
+            _currentPlayerHasActed = true;
+            _isResolvingSkill = true;
+            if (_skillsContainer != null) _skillsContainer.Visible = false;
+            BroadcastSkillName(_currentSpecial.SkillName, true);
+            await ExecuteChaosFateDiceSpecial(global, caster);
+            return;
+        }
 
         if (!global.HasEnoughFocus(1))
         {
@@ -364,7 +401,6 @@ public partial class Ui : Control
         if (_skillsContainer != null) _skillsContainer.Visible = false;
         BroadcastSkillName(_currentSpecial.SkillName, true);
 
-        var caster = global.CurrentActingUnit;
         var alivePlayers = global.GetAlivePlayers();
         var enemies = global.GetAliveEnemies(); // ✅ 方法开头只声明一次enemies，所有分支共用
         string tip = "";
@@ -618,7 +654,7 @@ public partial class Ui : Control
             global.ApplySkillEnergy(caster, _currentSpecial);
         }
 
-        FinishTurnConsumingAction(global);
+        FinishTurnConsumingAction(global, usedCoopAttack: true);
     }
 
     private async void OnUltimateCast()
@@ -634,6 +670,15 @@ public partial class Ui : Control
             {
                 _battleTipLabel.Text = "能量不足，无法释放大招";
             }
+            return;
+        }
+
+        if (global.IsChaosFateDice(caster))
+        {
+            _isResolvingSkill = true;
+            if (_skillsContainer != null) _skillsContainer.Visible = false;
+            BroadcastSkillName(_currentUltimate.SkillName, true);
+            await ExecuteChaosFateDiceUltimate(global, caster);
             return;
         }
 
@@ -1048,20 +1093,20 @@ public partial class Ui : Control
         GD.Print($"【你丸了】{enemy.UnitName}攻击迈阿密，自身额外叠加1层【你丸了】");
     }
 
-    private void CheckBattleAndContinue(GlobalScript global)
+    private void CheckBattleAndContinue(GlobalScript global, bool usedCoopAttack = false)
     {
         if (global.CheckBattleEnd())
         {
             OnBattleEnd(global);
             return;
         }
-        EndCurrentPlayerAction(global);
+        EndCurrentPlayerAction(global, usedCoopAttack ? CoopAttackActionEndDelaySeconds : DefaultActionEndDelaySeconds);
     }
 
-    private void FinishTurnConsumingAction(GlobalScript global)
+    private void FinishTurnConsumingAction(GlobalScript global, bool usedCoopAttack = false)
     {
         _isResolvingSkill = false;
-        CheckBattleAndContinue(global);
+        CheckBattleAndContinue(global, usedCoopAttack);
     }
 
     private void ReturnToCurrentPlayerTurnAfterUltimate(GlobalScript global, GlobalScript.BattleUnit caster)
@@ -1087,9 +1132,9 @@ public partial class Ui : Control
         }
     }
 
-    private void EndCurrentPlayerAction(GlobalScript global)
+    private void EndCurrentPlayerAction(GlobalScript global, float delaySeconds = DefaultActionEndDelaySeconds)
     {
-        GetTree().CreateTimer(1.0f).Timeout += () =>
+        GetTree().CreateTimer(delaySeconds).Timeout += () =>
         {
             global.OnSinglePlayerActionEnd();
         };
@@ -1129,6 +1174,17 @@ public partial class Ui : Control
         }
     }
 
+    public void HandleBattleEnd()
+    {
+        var global = GlobalScript.Instance;
+        if (global == null)
+        {
+            return;
+        }
+
+        OnBattleEnd(global);
+    }
+
     private void RefreshAttrLabel(GlobalScript.BattleUnit playerUnit)
     {
         if (_attrLabel == null || playerUnit == null) return;
@@ -1142,6 +1198,240 @@ $@"最大生命值：{playerUnit.HpMax:0}
 攻击力：{playerUnit.Attack:0}
 暴击率：{finalCritRate:0}%
 暴击伤害：{finalCritDamage:0}%";
+    }
+
+    private GlobalScript.SkillData FindBattleSkill(GlobalScript.BattleUnit unit, GlobalScript.SkillType type)
+    {
+        return unit?.Skills.Find(skill =>
+            skill != null &&
+            skill.Type == type &&
+            skill.Type != GlobalScript.SkillType.Passive &&
+            skill.Type != GlobalScript.SkillType.EnhancedSpecial &&
+            skill.IsSelectable &&
+            skill.ShowInBattleUi);
+    }
+
+    private void UpdateSkillButton(Button button, GlobalScript.SkillData skill)
+    {
+        if (button == null)
+        {
+            return;
+        }
+
+        button.Visible = skill != null;
+        button.Disabled = skill == null;
+        button.Modulate = Colors.White;
+        if (skill != null)
+        {
+            button.Text = skill.SkillName;
+        }
+    }
+
+    private void UpdatePassiveButton(Button button, GlobalScript.SkillData skill)
+    {
+        if (button == null)
+        {
+            return;
+        }
+
+        button.Visible = skill != null;
+        button.Disabled = true;
+        button.Modulate = new Color(1f, 1f, 1f, 0.6f);
+        if (skill != null)
+        {
+            button.Text = skill.SkillName;
+        }
+    }
+
+    private void AppendChaosExtraAttrLabel(GlobalScript.BattleUnit playerUnit)
+    {
+        if (_attrLabel == null || playerUnit == null || GlobalScript.Instance == null)
+        {
+            return;
+        }
+
+        var builder = new StringBuilder(_attrLabel.Text ?? string.Empty);
+        if (GlobalScript.Instance.IsChaosFateDice(playerUnit))
+        {
+            builder.AppendLine();
+            builder.Append($"鏈夊簭鍊硷細{GlobalScript.Instance.GetChaosOrderValue(playerUnit)}/6");
+        }
+
+        if (playerUnit.ChaosTeamCritDamageBuff > 0f)
+        {
+            builder.AppendLine();
+            float buffPercent = playerUnit.ChaosTeamCritDamageBuff * 100f;
+            builder.Append("鍏ㄩ槦鏆村嚮浼ゅ鍔犳垚锛歿" + buffPercent.ToString("0") + "% (" + playerUnit.ChaosTeamCritDamageBuffTurns + "鍥炲悎)");
+        }
+
+        _attrLabel.Text = builder.ToString();
+    }
+
+    private bool TryGetPrimaryEnemyTarget(GlobalScript global, out GlobalScript.BattleUnit target)
+    {
+        target = null;
+        var enemies = global.GetAliveEnemies();
+        if (enemies.Count <= 0)
+        {
+            _isResolvingSkill = false;
+            EndCurrentPlayerAction(global);
+            return false;
+        }
+
+        target = enemies[0];
+        return true;
+    }
+
+    private (float FinalDamage, bool IsCrit) RollCritDamage(GlobalScript.BattleUnit caster, float baseDamage)
+    {
+        float finalDamage = baseDamage;
+        bool isCrit = false;
+        float critRate = caster.GetFinalCritRate();
+        float randomValue = (float)GlobalScript.GlobalRandom.NextDouble();
+        if (randomValue <= critRate)
+        {
+            isCrit = true;
+            finalDamage *= caster.GetFinalCritDamage();
+        }
+
+        return (finalDamage, isCrit);
+    }
+
+    private async System.Threading.Tasks.Task ExecuteChaosFateDiceNormalAttack(GlobalScript global, GlobalScript.BattleUnit caster)
+    {
+        if (!TryGetPrimaryEnemyTarget(global, out var target))
+        {
+            return;
+        }
+
+        await ToSignal(GetTree().CreateTimer(0.2f), "timeout");
+
+        var result = RollCritDamage(caster, caster.HpMax * 0.05f);
+        global.TakeDamage(target, result.FinalDamage, isCrit: result.IsCrit, sourceUnit: caster);
+        global.ApplySkillEnergy(caster, _currentNormal);
+        global.GainFocus(1);
+
+        string tip = $"{caster.UnitName}的{_currentNormal.SkillName}命中，对{target.UnitName}造成{result.FinalDamage:0.0}点伤害！";
+        if (result.IsCrit) tip = "暴击！" + tip;
+        if (_battleTipLabel != null) _battleTipLabel.Text = tip;
+
+        await global.TriggerCoopAttack(target);
+        FinishTurnConsumingAction(global, usedCoopAttack: true);
+    }
+
+    private async System.Threading.Tasks.Task ExecuteChaosFateDiceSpecial(GlobalScript global, GlobalScript.BattleUnit caster)
+    {
+        if (!TryGetPrimaryEnemyTarget(global, out var target))
+        {
+            return;
+        }
+
+        global.ApplySkillEnergy(caster, _currentSpecial);
+        float selfCost = global.ApplyNonLethalCurrentHpCost(caster, 0.05f, _currentSpecial.SkillName);
+
+        await ToSignal(GetTree().CreateTimer(0.2f), "timeout");
+
+        int orderValue = global.GetChaosOrderValue(caster);
+        float enhancedChance = Mathf.Clamp(0.2f + orderValue * 0.1f, 0f, 1f);
+        bool triggerEnhanced = (float)GlobalScript.GlobalRandom.NextDouble() <= enhancedChance;
+
+        if (triggerEnhanced)
+        {
+            var enhancedSkill = global.FindSkillById(caster, _currentSpecial.EnhancedSkillId);
+            if (enhancedSkill != null)
+            {
+                BroadcastSkillName(enhancedSkill.SkillName, true);
+                await ExecuteChaosFateDiceEnhancedSpecial(global, caster, target, enhancedSkill, selfCost, enhancedChance);
+                return;
+            }
+        }
+
+        var result = RollCritDamage(caster, caster.HpMax * 0.20f);
+        global.TakeDamage(target, result.FinalDamage, isCrit: result.IsCrit, sourceUnit: caster);
+
+        string tip = $"{caster.UnitName}先消耗了{selfCost:0.0}点生命值，随后使用{_currentSpecial.SkillName}对{target.UnitName}造成{result.FinalDamage:0.0}点伤害！";
+        tip += "\n当前有序值：" + orderValue + "/6，稳稳拿下！触发概率：" + (enhancedChance * 100).ToString("0") + "%";
+        if (result.IsCrit) tip = "暴击！\n" + tip;
+        if (_battleTipLabel != null) _battleTipLabel.Text = tip;
+
+        await global.TriggerCoopAttack(target);
+        FinishTurnConsumingAction(global, usedCoopAttack: true);
+    }
+
+    private async System.Threading.Tasks.Task ExecuteChaosFateDiceEnhancedSpecial(
+        GlobalScript global,
+        GlobalScript.BattleUnit caster,
+        GlobalScript.BattleUnit target,
+        GlobalScript.SkillData enhancedSkill,
+        float selfCost,
+        float enhancedChance)
+    {
+        await ToSignal(GetTree().CreateTimer(0.15f), "timeout");
+
+        var result = RollCritDamage(caster, caster.HpMax * 0.40f);
+        global.TakeDamage(target, result.FinalDamage, isCrit: result.IsCrit, sourceUnit: caster);
+
+        int cleared = global.ClearChaosOrderValue(caster, enhancedSkill.SkillName);
+        if (cleared > 0)
+        {
+            global.ApplyChaosTeamCritDamageBuff(cleared);
+        }
+
+        string tip = $"{caster.UnitName}的{_currentSpecial.SkillName}触发了{enhancedSkill.SkillName}！";
+        tip += $"\n先消耗了{selfCost:0.0}点生命值，再对{target.UnitName}造成{result.FinalDamage:0.0}点伤害！";
+        tip += "\n触发时概率：" + (enhancedChance * 100).ToString("0") + "%，清空了" + cleared + "点有序值。";
+        if (cleared > 0)
+        {
+            tip += "\n全队获得" + (cleared * 10) + "%暴击伤害加成，持续3回合。";
+        }
+        if (result.IsCrit) tip = "暴击！\n" + tip;
+        if (_battleTipLabel != null) _battleTipLabel.Text = tip;
+
+        await global.TriggerCoopAttack(target);
+        FinishTurnConsumingAction(global);
+    }
+
+    private async System.Threading.Tasks.Task ExecuteChaosFateDiceUltimate(GlobalScript global, GlobalScript.BattleUnit caster)
+    {
+        var allies = global.GetAlivePlayers();
+        var enemies = global.GetAliveEnemies();
+        if (enemies.Count <= 0)
+        {
+            _isResolvingSkill = false;
+            return;
+        }
+
+        global.ApplySkillEnergy(caster, _currentUltimate);
+        var tipBuilder = new StringBuilder();
+        tipBuilder.AppendLine($"{caster.UnitName}释放{_currentUltimate.SkillName}！");
+
+        foreach (var ally in allies)
+        {
+            float cost = global.ApplyNonLethalCurrentHpCost(ally, 0.15f, _currentUltimate.SkillName);
+            tipBuilder.AppendLine($"{ally.UnitName}消耗了{cost:0.0}点当前生命值（最低保留1点）");
+        }
+
+        global.SetChaosOrderValue(caster, 6, _currentUltimate.SkillName);
+        tipBuilder.AppendLine($"{caster.UnitName}立即获得6点有序值。");
+
+        await ToSignal(GetTree().CreateTimer(0.2f), "timeout");
+
+        bool anyCrit = false;
+        foreach (var enemy in enemies)
+        {
+            var result = RollCritDamage(caster, caster.HpMax * 0.25f);
+            anyCrit |= result.IsCrit;
+            global.TakeDamage(enemy, result.FinalDamage, isCrit: result.IsCrit, sourceUnit: caster);
+            tipBuilder.AppendLine($"{enemy.UnitName}受到{result.FinalDamage:0.0}点伤害！");
+        }
+
+        if (_battleTipLabel != null)
+        {
+            _battleTipLabel.Text = anyCrit ? "暴击！\n" + tipBuilder : tipBuilder.ToString();
+        }
+
+        await global.TriggerCoopAttack(enemies[0]);
+        ReturnToCurrentPlayerTurnAfterUltimate(global, caster);
     }
     #endregion
 }

@@ -1,0 +1,211 @@
+[gd_scene format=3 uid="uid://b8hxgpdmm4qp4"]
+
+[ext_resource type="Script" uid="uid://bdtm6ea6ko76" path="res://Scripts/UI/CharacterDetailSceneController.cs" id="1_wi5xl"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_tl2wy"]
+bg_color = Color(0.02745098, 0.06666667, 0.12156863, 0.8)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.49411765, 0.8627451, 1, 0.53333336)
+corner_radius_top_left = 10
+corner_radius_top_right = 10
+corner_radius_bottom_right = 10
+corner_radius_bottom_left = 10
+
+[sub_resource type="LabelSettings" id="LabelSettings_k2mco"]
+font_size = 22
+font_color = Color(0.9490196, 0.827451, 0.5411765, 1)
+
+[sub_resource type="LabelSettings" id="LabelSettings_74pc1"]
+font_size = 30
+font_color = Color(0.9647059, 0.98039216, 1, 1)
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_onrev"]
+bg_color = Color(0.02745098, 0.06666667, 0.12156863, 0.9019608)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.9490196, 0.827451, 0.5411765, 0.53333336)
+corner_radius_top_left = 10
+corner_radius_top_right = 10
+corner_radius_bottom_right = 10
+corner_radius_bottom_left = 10
+
+[sub_resource type="LabelSettings" id="LabelSettings_uwjba"]
+font_size = 42
+font_color = Color(0.9647059, 0.98039216, 1, 1)
+
+[sub_resource type="LabelSettings" id="LabelSettings_ulwvj"]
+font_size = 22
+font_color = Color(0.49411765, 0.8627451, 1, 1)
+
+[sub_resource type="LabelSettings" id="LabelSettings_m5gsw"]
+font_size = 26
+font_color = Color(0.9490196, 0.827451, 0.5411765, 1)
+
+[node name="CharacterDetailScene" type="Control" unique_id=448952945]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_wi5xl")
+
+[node name="StarBackground" type="ColorRect" parent="." unique_id=126196026]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="PortraitBackground" type="TextureRect" parent="." unique_id=693098862]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+expand_mode = 3
+stretch_mode = 5
+
+[node name="DarkOverlay" type="ColorRect" parent="." unique_id=2047686293]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="SafeArea" type="MarginContainer" parent="." unique_id=1401206376]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="MainHBox" type="HBoxContainer" parent="SafeArea" unique_id=1604752766]
+layout_mode = 2
+
+[node name="LeftPortraitPanel" type="PanelContainer" parent="SafeArea/MainHBox" unique_id=234936270]
+custom_minimum_size = Vector2(430, 0)
+layout_mode = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_tl2wy")
+
+[node name="PortraitMargin" type="MarginContainer" parent="SafeArea/MainHBox/LeftPortraitPanel" unique_id=815664133]
+layout_mode = 2
+
+[node name="PortraitStack" type="Control" parent="SafeArea/MainHBox/LeftPortraitPanel/PortraitMargin" unique_id=888422984]
+layout_mode = 2
+
+[node name="FullPortrait" type="TextureRect" parent="SafeArea/MainHBox/LeftPortraitPanel/PortraitMargin/PortraitStack" unique_id=1781648180]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+expand_mode = 3
+stretch_mode = 5
+
+[node name="PortraitPlaceholder" type="Label" parent="SafeArea/MainHBox/LeftPortraitPanel/PortraitMargin/PortraitStack" unique_id=1686930699]
+layout_mode = 0
+offset_right = 40.0
+offset_bottom = 17.0
+text = "立绘待收录"
+label_settings = SubResource("LabelSettings_k2mco")
+horizontal_alignment = 1
+vertical_alignment = 2
+
+[node name="PortraitNamePlate" type="Label" parent="SafeArea/MainHBox/LeftPortraitPanel/PortraitMargin/PortraitStack" unique_id=1520126206]
+layout_mode = 1
+anchors_preset = 2
+anchor_top = 1.0
+anchor_bottom = 1.0
+offset_top = -17.0
+offset_right = 64.0
+grow_vertical = 0
+text = "无序命骰"
+label_settings = SubResource("LabelSettings_74pc1")
+
+[node name="RightInfoPanel" type="PanelContainer" parent="SafeArea/MainHBox" unique_id=232862902]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_styles/panel = SubResource("StyleBoxFlat_onrev")
+
+[node name="InfoMargin" type="MarginContainer" parent="SafeArea/MainHBox/RightInfoPanel" unique_id=322647804]
+layout_mode = 2
+
+[node name="InfoVBox" type="VBoxContainer" parent="SafeArea/MainHBox/RightInfoPanel/InfoMargin" unique_id=606610472]
+layout_mode = 2
+
+[node name="TopBar" type="HBoxContainer" parent="SafeArea/MainHBox/RightInfoPanel/InfoMargin/InfoVBox" unique_id=1329728423]
+layout_mode = 2
+
+[node name="TitleBox" type="VBoxContainer" parent="SafeArea/MainHBox/RightInfoPanel/InfoMargin/InfoVBox/TopBar" unique_id=932466115]
+layout_mode = 2
+
+[node name="NameLabel" type="Label" parent="SafeArea/MainHBox/RightInfoPanel/InfoMargin/InfoVBox/TopBar/TitleBox" unique_id=1619529618]
+layout_mode = 2
+text = "无序命骰"
+label_settings = SubResource("LabelSettings_uwjba")
+
+[node name="MajorLabel" type="Label" parent="SafeArea/MainHBox/RightInfoPanel/InfoMargin/InfoVBox/TopBar/TitleBox" unique_id=784916820]
+layout_mode = 2
+text = "主修： 命理"
+label_settings = SubResource("LabelSettings_ulwvj")
+
+[node name="BackButton" type="Button" parent="SafeArea/MainHBox/RightInfoPanel/InfoMargin/InfoVBox/TopBar" unique_id=1605333413]
+custom_minimum_size = Vector2(90, 42)
+layout_mode = 2
+text = "返回"
+
+[node name="StatPanel" type="PanelContainer" parent="SafeArea/MainHBox/RightInfoPanel/InfoMargin/InfoVBox" unique_id=1615612364]
+layout_mode = 2
+
+[node name="StatGrid" type="GridContainer" parent="SafeArea/MainHBox/RightInfoPanel/InfoMargin/InfoVBox/StatPanel" unique_id=2041728250]
+layout_mode = 2
+columns = 2
+
+[node name="HpLabel" type="Label" parent="SafeArea/MainHBox/RightInfoPanel/InfoMargin/InfoVBox/StatPanel/StatGrid" unique_id=21007879]
+layout_mode = 2
+
+[node name="AttackLabel" type="Label" parent="SafeArea/MainHBox/RightInfoPanel/InfoMargin/InfoVBox/StatPanel/StatGrid" unique_id=1787865100]
+layout_mode = 2
+
+[node name="CritRateLabel" type="Label" parent="SafeArea/MainHBox/RightInfoPanel/InfoMargin/InfoVBox/StatPanel/StatGrid" unique_id=1621042168]
+layout_mode = 2
+
+[node name="CritDamageLabel" type="Label" parent="SafeArea/MainHBox/RightInfoPanel/InfoMargin/InfoVBox/StatPanel/StatGrid" unique_id=445385566]
+layout_mode = 2
+
+[node name="EnergyLabel" type="Label" parent="SafeArea/MainHBox/RightInfoPanel/InfoMargin/InfoVBox/StatPanel/StatGrid" unique_id=1351787594]
+layout_mode = 2
+
+[node name="SkillTitleLabel" type="Label" parent="SafeArea/MainHBox/RightInfoPanel/InfoMargin/InfoVBox" unique_id=1887621581]
+layout_mode = 2
+text = "技能档案"
+label_settings = SubResource("LabelSettings_m5gsw")
+
+[node name="SkillScroll" type="ScrollContainer" parent="SafeArea/MainHBox/RightInfoPanel/InfoMargin/InfoVBox" unique_id=248390827]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+
+[node name="SkillList" type="VBoxContainer" parent="SafeArea/MainHBox/RightInfoPanel/InfoMargin/InfoVBox/SkillScroll" unique_id=849760377]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="BottomButtons" type="HBoxContainer" parent="SafeArea/MainHBox/RightInfoPanel/InfoMargin/InfoVBox" unique_id=1650541903]
+layout_mode = 2
+
+[node name="SelectButton" type="Button" parent="SafeArea/MainHBox/RightInfoPanel/InfoMargin/InfoVBox/BottomButtons" unique_id=329211004]
+layout_mode = 2
+
+[node name="ReturnButton" type="Button" parent="SafeArea/MainHBox/RightInfoPanel/InfoMargin/InfoVBox/BottomButtons" unique_id=1306794971]
+layout_mode = 2

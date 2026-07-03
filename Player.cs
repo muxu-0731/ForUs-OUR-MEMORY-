@@ -19,14 +19,18 @@ public partial class Player : Sprite2D
     private ProgressBar _hpVisual;
     private Label _hpLabel;
     private GlobalScript.BattleUnit _bindUnit;
-    private Tween _hpTween;
-    private float _animationDuration = 0.5f;
+    private BattleHpBarController _hpBarController;
+    private float _lastDisplayedHp = -1f;
+    private float _lastDisplayedHpMax = -1f;
     private Vector2 _baseScale;
     private Vector2 _baseOffset;
+    private Vector2 _attachedUiScreenOffset = Vector2.Zero;
     private Rect2 _visibleContentPixelBounds = new Rect2();
     private bool _hasVisibleContentBounds;
 
     public GlobalScript.BattleUnit BoundUnit => _bindUnit;
+    public int PlayerTeamIndex => _playerTeamIndex;
+    public Vector2 AttachedUiScreenOffset => _attachedUiScreenOffset;
 
     public Rect2 HpBarGlobalRect
     {
@@ -69,6 +73,7 @@ public partial class Player : Sprite2D
         if (_hpLabel == null) GD.PrintErr($"Player {_playerTeamIndex}: missing HpBar/playerhpLabel node.");
 
         UpdateHpBarLayout();
+        InitializeHpBarController();
         BindUnitData();
     }
 
@@ -80,23 +85,7 @@ public partial class Player : Sprite2D
             return;
         }
 
-        if (_hpActual != null)
-        {
-            _hpActual.MaxValue = _bindUnit.HpMax;
-            _hpActual.Value = _bindUnit.Hp;
-        }
-
-        if (_hpLabel != null)
-        {
-            _hpLabel.Text = $"{Mathf.Ceil(_bindUnit.Hp)}/{Mathf.Ceil(_bindUnit.HpMax)}";
-        }
-
-        if (_hpVisual != null && _hpActual != null && !Mathf.IsEqualApprox((float)_hpVisual.Value, (float)_hpActual.Value))
-        {
-            PlayHpAnimation((float)_hpActual.Value);
-        }
-
-        UpdateHpBarPosition();
+        RefreshAttachedUi();
 
         if (_bindUnit.IsDead)
         {
@@ -110,32 +99,49 @@ public partial class Player : Sprite2D
         {
             Visible = true;
             if (_hpBarRoot != null) _hpBarRoot.Visible = true;
+            if (_hpActual != null) _hpActual.Visible = true;
             if (_hpVisual != null) _hpVisual.Visible = true;
             if (_hpLabel != null) _hpLabel.Visible = true;
         }
     }
 
-    private void PlayHpAnimation(float targetHp)
+    private void InitializeHpBarController()
     {
-        if (_hpVisual == null || _hpActual == null)
+        if (_hpBarRoot == null || _hpActual == null || _hpVisual == null)
         {
             return;
         }
 
-        if (_hpTween != null && _hpTween.IsRunning())
-        {
-            _hpTween.Kill();
-        }
-
-        _hpVisual.MaxValue = _hpActual.MaxValue;
-
-        _hpTween = CreateTween();
-        _hpTween.SetEase(Tween.EaseType.Out).SetTrans(Tween.TransitionType.Quad);
-        _hpTween.TweenProperty(_hpVisual, "value", targetHp, _animationDuration);
+        _hpBarController = new BattleHpBarController(
+            this,
+            _hpBarRoot,
+            _hpActual,
+            _hpVisual,
+            _hpLabel,
+            BattleHpBarController.CreatePlayerPalette());
     }
 
     public void UpdateHp()
     {
+        if (_bindUnit == null || _hpBarController == null)
+        {
+            return;
+        }
+
+        float hpMax = Mathf.Max(1f, _bindUnit.HpMax);
+        float newHp = Mathf.Clamp(_bindUnit.Hp, 0f, hpMax);
+
+        if (_lastDisplayedHp < 0f || _lastDisplayedHpMax <= 0f)
+        {
+            _hpBarController.ApplyImmediate(newHp, hpMax);
+        }
+        else
+        {
+            _hpBarController.AnimateHpChange(_lastDisplayedHp, newHp, hpMax);
+        }
+
+        _lastDisplayedHp = newHp;
+        _lastDisplayedHpMax = hpMax;
     }
 
     private void BindUnitData()
@@ -161,9 +167,12 @@ public partial class Player : Sprite2D
                 Texture = texture;
                 ApplyTextureDisplay(texture);
                 UpdateHpBarLayout();
-                UpdateHpBarPosition();
+                RefreshAttachedUi();
             }
         }
+
+        SyncHpBarImmediate();
+        UpdateBoundUnitWorldAnchors();
 
         global.RefreshCurrentTurnIndicator();
         GD.Print($"Player [{_bindUnit.UnitName}] bound successfully at team index {_playerTeamIndex}.");
@@ -210,6 +219,51 @@ public partial class Player : Sprite2D
         CacheVisibleBounds(visibleMetrics);
     }
 
+    public void RefreshAttachedUi()
+    {
+        UpdateHpBarPosition();
+
+        if (GetNodeOrNull<EnergyBar>("EnergyBar") is EnergyBar energyBar)
+        {
+            energyBar.RefreshLayout();
+        }
+
+        UpdateBoundUnitWorldAnchors();
+    }
+
+    public void SetFormationFootPosition(Vector2 worldFootPosition)
+    {
+        Vector2 currentFoot = GetFootAnchorGlobal();
+        GlobalPosition += worldFootPosition - currentFoot;
+        RefreshAttachedUi();
+    }
+
+    public void SetAttachedUiScreenOffset(Vector2 screenOffset)
+    {
+        _attachedUiScreenOffset = screenOffset;
+    }
+
+    public Rect2 GetDisplayBoundsGlobal()
+    {
+        return BattleViewUtility.TransformRectToGlobal(this, GetDisplayBoundsLocal());
+    }
+
+    public Vector2 GetFootAnchorLocal()
+    {
+        return BattleViewUtility.GetBottomCenter(GetDisplayBoundsLocal());
+    }
+
+    public Vector2 GetFootAnchorGlobal()
+    {
+        return ToGlobal(GetFootAnchorLocal());
+    }
+
+    public Vector2 GetSelectionAnchorGlobal()
+    {
+        Rect2 bounds = GetDisplayBoundsGlobal();
+        return new Vector2(bounds.GetCenter().X, bounds.End.Y - Mathf.Min(12f, bounds.Size.Y * 0.08f));
+    }
+
     private void UpdateHpBarPosition()
     {
         if (_hpBarRoot == null || Texture == null)
@@ -224,7 +278,8 @@ public partial class Player : Sprite2D
         _hpBarRoot.Scale = new Vector2(1f / safeScale.X, 1f / safeScale.Y);
         _hpBarRoot.Position = new Vector2(
             displayCenterX - FixedHpBarWidth * 0.5f / safeScale.X,
-            displayBounds.Position.Y - (HpBarVerticalMargin + FixedHpBarHeight) / safeScale.Y);
+            displayBounds.Position.Y - (HpBarVerticalMargin + FixedHpBarHeight) / safeScale.Y)
+            + new Vector2(_attachedUiScreenOffset.X / safeScale.X, _attachedUiScreenOffset.Y / safeScale.Y);
     }
 
     private void UpdateHpBarLayout()
@@ -289,5 +344,30 @@ public partial class Player : Sprite2D
         return new Vector2(
             Mathf.Max(Mathf.Abs(Scale.X), 0.001f),
             Mathf.Max(Mathf.Abs(Scale.Y), 0.001f));
+    }
+
+    private void UpdateBoundUnitWorldAnchors()
+    {
+        if (_bindUnit == null)
+        {
+            return;
+        }
+
+        _bindUnit.WorldPosition = GlobalPosition;
+        _bindUnit.AnchorWorldPosition = GetFootAnchorGlobal();
+    }
+
+    private void SyncHpBarImmediate()
+    {
+        if (_bindUnit == null || _hpBarController == null)
+        {
+            return;
+        }
+
+        float hpMax = Mathf.Max(1f, _bindUnit.HpMax);
+        float hp = Mathf.Clamp(_bindUnit.Hp, 0f, hpMax);
+        _hpBarController.ApplyImmediate(hp, hpMax);
+        _lastDisplayedHp = hp;
+        _lastDisplayedHpMax = hpMax;
     }
 }

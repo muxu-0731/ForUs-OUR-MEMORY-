@@ -269,6 +269,29 @@ public static class DotGlobalManager
         }
     }
 
+    public static bool HasTurnStartDamageToResolve(GlobalScript.BattleUnit unit)
+    {
+        if (unit == null || unit.IsDead || unit.DamageOverTimeEffects == null)
+        {
+            return false;
+        }
+
+        foreach (var dot in unit.DamageOverTimeEffects)
+        {
+            if (dot == null || dot.RemainingTurns <= 0 || dot.StackCount <= 0)
+            {
+                continue;
+            }
+
+            if (dot.DamageMultiplier > 0f)
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
     public static float GetDamageTakenBonus(GlobalScript.BattleUnit target)
     {
         if (target?.DamageOverTimeEffects == null)

@@ -46,7 +46,7 @@ public partial class MainMenu : Node2D
 
     private void OnChooseCharacterPressed()
     {
-        GetTree().ChangeSceneToFile("res://character_select.tscn");
+        GetTree().ChangeSceneToFile("res://Scenes/CharacterSelectScene.tscn");
     }
 
     private void OnQuitPressed()

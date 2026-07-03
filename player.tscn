@@ -1,6 +1,6 @@
 [gd_scene format=3 uid="uid://b00dsd2w8yru6"]
 
-[ext_resource type="Texture2D" uid="uid://cggifg0v6omxl" path="res://sucaibao - 副本/GameAssets/player.png" id="1_4flbx"]
+[ext_resource type="Texture2D" path="res://character_picture/chicken.png" id="1_4flbx"]
 [ext_resource type="Script" uid="uid://by2kdbxqrtt81" path="res://Player.cs" id="2_sweqy"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_onrkg"]

@@ -6,6 +6,7 @@
   "Attack": 10,
   "CritRate": 0.25,
   "CritDamage": 1.5,
+  "major": "命理",
   "IsPlayerUnit": true,
   "MaxEnergy": 100,
   "Skills": [

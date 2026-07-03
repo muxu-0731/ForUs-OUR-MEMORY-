@@ -1,17 +1,18 @@
 using Godot;
 using System;
 using System.Collections.Generic;
-using System.Text.Json;
 
 public partial class GlobalScript : Node
 {
     public const int MaxPartySize = 4;
+    public const int InvalidPartySlotIndex = -1;
 
     private const string EvilRabbitJsonPath = "res://character_data/evil_rabbit.json";
     private const string TakeawayCatJsonPath = "res://character_data/takeaway_cat.json";
     private const string ChickenJsonPath = "res://character_data/chicken.json";
     private const string AppleQueenJsonPath = "res://character_data/apple_queen.json";
     private const string MiaminJsonPath = "res://character_data/miamin.json";
+    private const string ChaosFateDiceJsonPath = "res://character_data/chaos_fate_dice.json";
     private static readonly string[] DefaultSelectedTeamJsonPaths =
     {
         AppleQueenJsonPath,
@@ -20,10 +21,16 @@ public partial class GlobalScript : Node
         TakeawayCatJsonPath
     };
 
-    private static readonly JsonSerializerOptions CharacterJsonOptions = new JsonSerializerOptions
-    {
-        PropertyNameCaseInsensitive = true
-    };
+    public const string ChaosFateDiceUnitName = "无序命骰";
+    private const int ChaosOrderValueMax = 6;
+    private const float ChaosOrderCritRatePerStack = 0.05f;
+    private const float ChaosOrderCritDamagePerStack = 0.08f;
+    private const float ChaosTeamCritDamagePerOrder = 0.10f;
+    private const float ChaosTeamCritDamageCap = 1.0f;
+    private const int ChaosTeamCritDamageBuffDuration = 3;
+    private const float TurnStartDotPreResolveDelaySeconds = 1.0f;
+    private const float TurnStartDotResolveDisplaySeconds = 0.5f;
+    private const float TurnStartDotPostResolveDelaySeconds = 0.5f;
 
     // 全局单例
     public static GlobalScript Instance { get; private set; }
@@ -36,7 +43,8 @@ public partial class GlobalScript : Node
         Passive,
         Normal,
         Special,
-        Ultimate
+        Ultimate,
+        EnhancedSpecial
     }
 
     // 技能数据结构
@@ -47,6 +55,10 @@ public partial class GlobalScript : Node
         public string Description;
         public SkillType Type;
         public int EnergyCost;
+        public string EnhancedSkillId;
+        public bool IsSelectable = true;
+        public bool ShowInBattleUi = true;
+        public string TriggeredBySkillId;
     }
 
     public class SelectedCharacterData
@@ -68,6 +80,12 @@ public partial class GlobalScript : Node
     // 战斗单位类
     public class BattleUnit
     {
+        public enum PlayerSlotType
+        {
+            FormalPartyMember,
+            Summon
+        }
+
         public string UnitName;
         public string TexturePath;
         public float Hp;
@@ -113,6 +131,9 @@ public partial class GlobalScript : Node
         public float ExtraCritRateBuff = 0f;
         public float ExtraCritDamageBuff = 0f;
         public int DeadLiveBuffTurns = 0;
+        public int ChaosOrderValue = 0;
+        public float ChaosTeamCritDamageBuff = 0f;
+        public int ChaosTeamCritDamageBuffTurns = 0;
 
         // 该角色拥有的技能列表
         public List<SkillData> Skills = new List<SkillData>();
@@ -130,7 +151,18 @@ public partial class GlobalScript : Node
 
         public bool IsPlayerUnit;
         public Node2D BindNode;
+        public Vector2 WorldPosition;
+        public Vector2 AnchorWorldPosition;
+        public PlayerSlotType SlotType = PlayerSlotType.FormalPartyMember;
+        public int PartySlotIndex = InvalidPartySlotIndex;
+        public int OwnerPartySlotIndex = InvalidPartySlotIndex;
         public bool IsDead => Hp <= 0;
+        public bool IsSummon => SlotType == PlayerSlotType.Summon;
+
+        public int ResolvePlayerTrackIndex()
+        {
+            return IsSummon ? OwnerPartySlotIndex : PartySlotIndex;
+        }
 
         public bool HasRegularCustomerMark; // 是否持有熟客印记
         public int RegularCustomerMarkTurns; // 印记剩余持续回合
@@ -170,13 +202,13 @@ public partial class GlobalScript : Node
         // 获取最终暴击率（基础+buff，保底0）
         public float GetFinalCritRate()
         {
-            return Mathf.Max(0f, CritRate + ExtraCritRateBuff);
+            return Mathf.Max(0f, CritRate + ExtraCritRateBuff + ChaosOrderValue * ChaosOrderCritRatePerStack);
         }
 
         // 获取最终暴击伤害（基础+buff，保底100%）
         public float GetFinalCritDamage()
         {
-            return Mathf.Max(1f, CritDamage + ExtraCritDamageBuff);
+            return Mathf.Max(1f, CritDamage + ExtraCritDamageBuff + ChaosTeamCritDamageBuff + ChaosOrderValue * ChaosOrderCritDamagePerStack);
         }
     }
 
@@ -189,6 +221,7 @@ public partial class GlobalScript : Node
     public enum BattleState
     {
         Waiting,
+        TurnStartStatusResolve,
         PlayerTurn,
         EnemyTurn,
         BattleEnd
@@ -240,28 +273,16 @@ public partial class GlobalScript : Node
             return null;
         }
 
-        if (!Godot.FileAccess.FileExists(jsonPath))
-        {
-            GD.PrintErr($"角色配置文件不存在：{jsonPath}");
-            return null;
-        }
-
         try
         {
-            using var file = Godot.FileAccess.Open(jsonPath, Godot.FileAccess.ModeFlags.Read);
-            if (file == null)
-            {
-                GD.PrintErr($"角色配置文件打开失败：{jsonPath}，错误码：{Godot.FileAccess.GetOpenError()}");
-                return null;
-            }
-
-            string jsonText = file.GetAsText();
-            var config = JsonSerializer.Deserialize<CharacterConfig>(jsonText, CharacterJsonOptions);
+            CharacterConfig config = CharacterDataRepository.LoadCharacterConfig(jsonPath, out string resolvedJsonPath);
             if (config == null)
             {
                 GD.PrintErr($"角色配置解析结果为空：{jsonPath}");
                 return null;
             }
+
+            GD.Print($"GlobalScript: creating battle unit from json='{resolvedJsonPath}', TexturePath='{config.TexturePath}', exported={CharacterDataRepository.IsExportedRuntime}");
 
             var unit = new BattleUnit
             {
@@ -288,7 +309,7 @@ public partial class GlobalScript : Node
 
                     if (!Enum.TryParse(skillConfig.Type, true, out SkillType skillType))
                     {
-                        GD.PrintErr($"角色技能类型解析失败：{jsonPath} -> {skillConfig.SkillId} / {skillConfig.Type}");
+                        GD.PrintErr($"角色技能类型解析失败：{resolvedJsonPath} -> {skillConfig.SkillId} / {skillConfig.Type}");
                         continue;
                     }
 
@@ -298,17 +319,16 @@ public partial class GlobalScript : Node
                         SkillName = skillConfig.SkillName,
                         Description = skillConfig.Description,
                         Type = skillType,
-                        EnergyCost = skillConfig.EnergyCost
+                        EnergyCost = skillConfig.EnergyCost,
+                        EnhancedSkillId = skillConfig.EnhancedSkillId,
+                        IsSelectable = skillConfig.IsSelectable,
+                        ShowInBattleUi = skillConfig.ShowInBattleUi,
+                        TriggeredBySkillId = skillConfig.TriggeredBySkillId
                     });
                 }
             }
 
             return unit;
-        }
-        catch (JsonException ex)
-        {
-            GD.PrintErr($"角色配置 JSON 解析失败：{jsonPath}，异常：{ex.Message}");
-            return null;
         }
         catch (Exception ex)
         {
@@ -322,14 +342,19 @@ public partial class GlobalScript : Node
     {
         PlayerTeam.Clear();
 
-        string[] characterJsonPaths =
+        var characterJsonPaths = CharacterDataRepository.LoadPlayerCharacterJsonPaths();
+        if (characterJsonPaths.Count == 0)
         {
-            EvilRabbitJsonPath,
-            TakeawayCatJsonPath,
-            ChickenJsonPath,
-            AppleQueenJsonPath,
-            MiaminJsonPath
-        };
+            characterJsonPaths = new List<string>
+            {
+                EvilRabbitJsonPath,
+                TakeawayCatJsonPath,
+                ChickenJsonPath,
+                AppleQueenJsonPath,
+                MiaminJsonPath,
+                ChaosFateDiceJsonPath
+            };
+        }
 
         foreach (string jsonPath in characterJsonPaths)
         {
@@ -457,7 +482,12 @@ public partial class GlobalScript : Node
                 return false;
             }
 
-            orderedTeam.Add(CloneBattleUnit(templateUnit, selectedCharacter.TexturePath));
+            int slotIndex = orderedTeam.Count;
+            var orderedUnit = CloneBattleUnit(templateUnit, selectedCharacter.TexturePath);
+            orderedUnit.SlotType = BattleUnit.PlayerSlotType.FormalPartyMember;
+            orderedUnit.PartySlotIndex = slotIndex;
+            orderedUnit.OwnerPartySlotIndex = InvalidPartySlotIndex;
+            orderedTeam.Add(orderedUnit);
         }
 
         return orderedTeam.Count == MaxPartySize;
@@ -480,6 +510,9 @@ public partial class GlobalScript : Node
             unit.ReviewCaster = null;
             unit.MiaminFatalProtectionUsed = false;
             unit.MiaminNoMeatballState = false;
+            unit.ChaosOrderValue = 0;
+            unit.ChaosTeamCritDamageBuff = 0f;
+            unit.ChaosTeamCritDamageBuffTurns = 0;
         }
 
         var chicken = PlayerTeam.Find(unit => unit != null && unit.UnitName == "小鸡");
@@ -504,6 +537,9 @@ public partial class GlobalScript : Node
             IsPlayerUnit = sourceUnit.IsPlayerUnit,
             MaxEnergy = Mathf.Max(0, sourceUnit.MaxEnergy),
             CurrentEnergy = Mathf.Clamp(sourceUnit.CurrentEnergy, 0, Mathf.Max(0, sourceUnit.MaxEnergy)),
+            SlotType = sourceUnit.SlotType,
+            PartySlotIndex = sourceUnit.PartySlotIndex,
+            OwnerPartySlotIndex = sourceUnit.OwnerPartySlotIndex,
             MiaminFatalProtectionUsed = false,
             MiaminNoMeatballState = false
         };
@@ -516,7 +552,11 @@ public partial class GlobalScript : Node
                 SkillName = skill.SkillName,
                 Description = skill.Description,
                 Type = skill.Type,
-                EnergyCost = skill.EnergyCost
+                EnergyCost = skill.EnergyCost,
+                EnhancedSkillId = skill.EnhancedSkillId,
+                IsSelectable = skill.IsSelectable,
+                ShowInBattleUi = skill.ShowInBattleUi,
+                TriggeredBySkillId = skill.TriggeredBySkillId
             });
         }
 
@@ -673,6 +713,11 @@ public partial class GlobalScript : Node
 
         target.Hp = newHp;
 
+        if (IsChaosFateDice(target) && !Mathf.IsEqualApprox(target.Hp / Mathf.Max(1f, target.HpMax), beforeHpPercent))
+        {
+            AddChaosOrderValue(target, 1, "生命值下降");
+        }
+
         if (finalDamage > 0f && DamagePopfxManager.Instance != null && target.BindNode != null)
         {
             Vector2 popfxPosition = target.BindNode.GlobalPosition;
@@ -734,6 +779,11 @@ public partial class GlobalScript : Node
 
         // 结算治疗
         target.Hp = Mathf.Min(target.HpMax, target.Hp + healValue);
+
+        if (IsChaosFateDice(target) && !Mathf.IsEqualApprox(target.Hp / Mathf.Max(1f, target.HpMax), beforeHpPercent))
+        {
+            AddChaosOrderValue(target, 1, "生命值上升");
+        }
 
         int countedHeal = Mathf.RoundToInt(healValue);
         if (countedHeal > 0 && DamagePopfxManager.Instance != null && target.BindNode != null)
@@ -941,6 +991,118 @@ public partial class GlobalScript : Node
         }
     }
 
+    public bool IsChaosFateDice(BattleUnit unit)
+    {
+        return unit != null && unit.IsPlayerUnit && unit.UnitName == ChaosFateDiceUnitName;
+    }
+
+    public SkillData FindSkillById(BattleUnit unit, string skillId)
+    {
+        if (unit == null || string.IsNullOrWhiteSpace(skillId))
+        {
+            return null;
+        }
+
+        return unit.Skills.Find(skill => skill != null && skill.SkillId == skillId);
+    }
+
+    public int GetChaosOrderValue(BattleUnit unit)
+    {
+        return unit == null ? 0 : Mathf.Clamp(unit.ChaosOrderValue, 0, ChaosOrderValueMax);
+    }
+
+    public int AddChaosOrderValue(BattleUnit unit, int amount, string reason = null)
+    {
+        if (!IsChaosFateDice(unit) || amount <= 0)
+        {
+            return 0;
+        }
+
+        int before = GetChaosOrderValue(unit);
+        unit.ChaosOrderValue = Mathf.Clamp(before + amount, 0, ChaosOrderValueMax);
+        int gained = unit.ChaosOrderValue - before;
+
+        if (gained > 0)
+        {
+            GD.Print($"【有序值】{unit.UnitName} 因 {reason ?? "生命值变化"} 获得 {gained} 点有序值，当前 {unit.ChaosOrderValue}/{ChaosOrderValueMax}");
+        }
+
+        return gained;
+    }
+
+    public void SetChaosOrderValue(BattleUnit unit, int value, string reason = null)
+    {
+        if (!IsChaosFateDice(unit))
+        {
+            return;
+        }
+
+        unit.ChaosOrderValue = Mathf.Clamp(value, 0, ChaosOrderValueMax);
+        GD.Print($"【有序值】{unit.UnitName} 的有序值被设置为 {unit.ChaosOrderValue}/{ChaosOrderValueMax}，原因：{reason ?? "未说明"}");
+    }
+
+    public int ClearChaosOrderValue(BattleUnit unit, string reason = null)
+    {
+        if (!IsChaosFateDice(unit))
+        {
+            return 0;
+        }
+
+        int cleared = GetChaosOrderValue(unit);
+        unit.ChaosOrderValue = 0;
+        GD.Print($"【有序值】{unit.UnitName} 清空了 {cleared} 点有序值，原因：{reason ?? "未说明"}");
+        return cleared;
+    }
+
+    public float ApplyNonLethalSelfHpCost(BattleUnit unit, float hpCost, string reason = null)
+    {
+        if (unit == null || unit.IsDead || hpCost <= 0f)
+        {
+            return 0f;
+        }
+
+        float actualCost = Mathf.Min(hpCost, Mathf.Max(0f, unit.Hp - 1f));
+        if (actualCost <= 0f)
+        {
+            return 0f;
+        }
+
+        TakeDamage(unit, actualCost, isFriendlyBurnSoul: unit.IsPlayerUnit, sourceUnit: unit);
+        GD.Print($"【生命代价】{unit.UnitName} 因 {reason ?? "技能效果"} 实际失去 {actualCost:0.0} 点生命");
+        return actualCost;
+    }
+
+    public float ApplyNonLethalCurrentHpCost(BattleUnit unit, float percent, string reason = null)
+    {
+        if (unit == null || unit.IsDead || percent <= 0f)
+        {
+            return 0f;
+        }
+
+        return ApplyNonLethalSelfHpCost(unit, unit.Hp * percent, reason);
+    }
+
+    public void ApplyChaosTeamCritDamageBuff(int clearedOrderValue)
+    {
+        if (clearedOrderValue <= 0)
+        {
+            return;
+        }
+
+        float bonus = clearedOrderValue * ChaosTeamCritDamagePerOrder;
+        foreach (var ally in GetAlivePlayers())
+        {
+            float before = ally.ChaosTeamCritDamageBuff;
+            ally.ChaosTeamCritDamageBuff = Mathf.Min(ChaosTeamCritDamageCap, ally.ChaosTeamCritDamageBuff + bonus);
+            if (ally.ChaosTeamCritDamageBuff > before)
+            {
+                ally.ChaosTeamCritDamageBuffTurns = ChaosTeamCritDamageBuffDuration;
+            }
+        }
+
+        GD.Print($"【稳稳拿下！】全队获得 {bonus * 100:0}% 暴击伤害，持续 {ChaosTeamCritDamageBuffDuration} 回合");
+    }
+
     public List<BattleUnit> GetAdjacentEnemies(BattleUnit centerTarget)
     {
         var adjacentEnemies = new List<BattleUnit>();
@@ -1141,21 +1303,29 @@ public partial class GlobalScript : Node
         }
 
         var indicator = new TurnIndicatorEffect();
-        indicator.Configure(CalculateTurnIndicatorRadius(currentCharacter));
+        indicator.Configure(currentCharacter, CalculateTurnIndicatorRadius(currentCharacter));
         parentNode.AddChild(indicator);
-        indicator.GlobalPosition = currentCharacter.GlobalPosition + new Vector2(0, 15f);
         _currentTurnIndicator = indicator;
     }
 
     private float CalculateTurnIndicatorRadius(Node2D currentCharacter)
     {
+        if (currentCharacter is Player player)
+        {
+            Rect2 bounds = player.GetDisplayBoundsGlobal();
+            return Mathf.Max(bounds.Size.X, bounds.Size.Y) * 0.38f;
+        }
+
+        if (currentCharacter is Enemy enemy)
+        {
+            Rect2 bounds = enemy.GetDisplayBoundsGlobal();
+            return Mathf.Max(bounds.Size.X, bounds.Size.Y) * 0.33f;
+        }
+
         if (currentCharacter is Sprite2D sprite && sprite.Texture != null)
         {
-            Vector2 textureSize = sprite.Texture.GetSize();
-            Vector2 scale = sprite.GlobalScale.Abs();
-            float width = textureSize.X * scale.X;
-            float height = textureSize.Y * scale.Y;
-            return Mathf.Max(width, height) * 0.6f;
+            Vector2 textureSize = sprite.Texture.GetSize() * sprite.GlobalScale.Abs();
+            return Mathf.Max(textureSize.X, textureSize.Y) * 0.35f;
         }
 
         return 80f;
@@ -1170,6 +1340,17 @@ public partial class GlobalScript : Node
         }
 
         UpdateTurnIndicator(CurrentActingUnit.BindNode);
+    }
+
+    private bool CheckBattleEndAndNotifyUi()
+    {
+        if (!CheckBattleEnd())
+        {
+            return false;
+        }
+
+        Ui.Instance?.HandleBattleEnd();
+        return true;
     }
 
     // 回合结束状态处理（新增小鸡Debuff回合管理）
@@ -1221,6 +1402,15 @@ public partial class GlobalScript : Node
             // 其他通用状态
             if (unit.HardenedTurns > 0) { unit.HardenedTurns--; if (unit.HardenedTurns <= 0) unit.Hardened = false; }
             if (unit.CursedTurns > 0) { unit.CursedTurns--; if (unit.CursedTurns <= 0) unit.Cursed = false; }
+            if (unit.ChaosTeamCritDamageBuffTurns > 0)
+            {
+                unit.ChaosTeamCritDamageBuffTurns--;
+                if (unit.ChaosTeamCritDamageBuffTurns <= 0)
+                {
+                    unit.ChaosTeamCritDamageBuff = 0f;
+                    GD.Print($"【暴击伤害增益结束】{unit.UnitName} 通过【稳稳拿下！】获得的暴击伤害加成已消失");
+                }
+            }
         }
 
         // 处理敌人状态
@@ -1297,6 +1487,69 @@ public partial class GlobalScript : Node
         return false;
     }
 
+    private void BeginUnitActionTurn(BattleUnit unit)
+    {
+        if (unit == null || unit.IsDead)
+        {
+            return;
+        }
+
+        CurrentActingUnit = unit;
+        UpdateTurnIndicator(unit.BindNode);
+
+        if (unit.IsPlayerUnit)
+        {
+            CurrentState = BattleState.PlayerTurn;
+            Ui.Instance?.OnSinglePlayerTurnStart(unit);
+            return;
+        }
+
+        CurrentState = BattleState.EnemyTurn;
+        Ui.Instance?.StartEnemyAI(unit);
+    }
+
+    private async void StartTurnStartStatusResolvePhase(BattleUnit unit)
+    {
+        if (unit == null || unit.IsDead)
+        {
+            return;
+        }
+
+        CurrentActingUnit = unit;
+        CurrentState = BattleState.TurnStartStatusResolve;
+        UpdateTurnIndicator(unit.BindNode);
+        Ui.Instance?.OnTurnStartStatusResolve(unit);
+
+        await ToSignal(GetTree().CreateTimer(TurnStartDotPreResolveDelaySeconds), SceneTreeTimer.SignalName.Timeout);
+
+        bool unitDiedFromStatus = ResolveTurnStartStatuses(unit);
+        await ToSignal(GetTree().CreateTimer(TurnStartDotResolveDisplaySeconds), SceneTreeTimer.SignalName.Timeout);
+
+        if (unitDiedFromStatus)
+        {
+            if (CheckBattleEndAndNotifyUi())
+            {
+                return;
+            }
+
+            CurrentActingUnitIndex++;
+            CurrentActingUnit = null;
+
+            if (unit.IsPlayerUnit)
+            {
+                FindNextAlivePlayer();
+            }
+            else
+            {
+                FindNextAliveEnemy();
+            }
+            return;
+        }
+
+        await ToSignal(GetTree().CreateTimer(TurnStartDotPostResolveDelaySeconds), SceneTreeTimer.SignalName.Timeout);
+        BeginUnitActionTurn(unit);
+    }
+
     // 找下一个存活的玩家
     private void FindNextAlivePlayer()
     {
@@ -1305,20 +1558,25 @@ public partial class GlobalScript : Node
             var unit = PlayerTeam[CurrentActingUnitIndex];
             if (!unit.IsDead)
             {
+                if (DotGlobalManager.HasTurnStartDamageToResolve(unit))
+                {
+                    StartTurnStartStatusResolvePhase(unit);
+                    return;
+                }
+
                 if (ResolveTurnStartStatuses(unit))
                 {
-                    if (CheckBattleEnd())
+                    if (CheckBattleEndAndNotifyUi())
                     {
                         return;
                     }
 
+                    CurrentActingUnit = null;
                     CurrentActingUnitIndex++;
                     continue;
                 }
 
-                CurrentActingUnit = unit;
-                UpdateTurnIndicator(unit.BindNode);
-                Ui.Instance?.OnSinglePlayerTurnStart(unit);
+                BeginUnitActionTurn(unit);
                 return;
             }
             CurrentActingUnitIndex++;
@@ -1353,20 +1611,25 @@ public partial class GlobalScript : Node
             var unit = EnemyTeam[CurrentActingUnitIndex];
             if (!unit.IsDead)
             {
+                if (DotGlobalManager.HasTurnStartDamageToResolve(unit))
+                {
+                    StartTurnStartStatusResolvePhase(unit);
+                    return;
+                }
+
                 if (ResolveTurnStartStatuses(unit))
                 {
-                    if (CheckBattleEnd())
+                    if (CheckBattleEndAndNotifyUi())
                     {
                         return;
                     }
 
+                    CurrentActingUnit = null;
                     CurrentActingUnitIndex++;
                     continue;
                 }
 
-                CurrentActingUnit = unit;
-                UpdateTurnIndicator(unit.BindNode);
-                Ui.Instance?.StartEnemyAI(unit);
+                BeginUnitActionTurn(unit);
                 return;
             }
             CurrentActingUnitIndex++;

@@ -1,0 +1,29 @@
+{
+  "UnitId": "watcher",
+  "UnitName": "窥视者",
+  "TexturePath": "res://enemy_picture/KuiShiZhe.png",
+  "Hp": 100,
+  "HpMax": 100,
+  "Attack": 50,
+  "IsPlayerUnit": false,
+  "BattleConfig": {
+    "TurnBehavior": "RandomAvailableSkill",
+    "HasEnergy": false,
+    "HasFocus": false
+  },
+  "Skills": [
+    {
+      "SkillId": "watcher_peek_once",
+      "SkillName": "偷看一眼",
+      "Description": "对一名随机敌人造成【20%攻击力】的伤害。",
+      "Type": "BossSkill",
+      "EnergyCost": 0,
+      "CanRandomCast": true,
+      "TargetType": "RandomEnemy",
+      "EffectData": {
+        "DamageBase": "Attack",
+        "DamageMultiplier": 0.2
+      }
+    }
+  ]
+}

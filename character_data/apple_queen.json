@@ -6,6 +6,7 @@
   "Attack": 150,
   "CritRate": 0.05,
   "CritDamage": 1.5,
+  "major": "干扰",
   "IsPlayerUnit": true,
   "MaxEnergy": 80,
   "Skills": [

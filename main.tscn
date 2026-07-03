@@ -5,9 +5,9 @@
 [ext_resource type="PackedScene" uid="uid://b00dsd2w8yru6" path="res://player.tscn" id="2_h2yge"]
 [ext_resource type="Texture2D" uid="uid://b406rysdjh03i" path="res://background_picture/campus.png" id="2_kek77"]
 [ext_resource type="PackedScene" uid="uid://drjx0wt7l47oq" path="res://enemy.tscn" id="3_h2yge"]
-[ext_resource type="Texture2D" uid="uid://c7vqhox4iheyp" path="res://2dres - 副本/char/poor-kid1.png" id="5_5vw27"]
-[ext_resource type="Texture2D" uid="uid://8tsmkit8gmxi" path="res://2dres - 副本/shot.png" id="6_7mycd"]
-[ext_resource type="Texture2D" uid="uid://c66rjox2k2mga" path="res://2dres - 副本/char/1.png" id="6_kek77"]
+[ext_resource type="Texture2D" path="res://character_picture/deliverycat.png" id="5_5vw27"]
+[ext_resource type="Texture2D" path="res://2dres/shot.png" id="6_7mycd"]
+[ext_resource type="Texture2D" path="res://character_picture/evilrabbit.png" id="6_kek77"]
 [ext_resource type="PackedScene" uid="uid://ctebrkl5hbx8b" path="res://effects/ParticleEffectManager.tscn" id="9_kek77"]
 
 [sub_resource type="LabelSettings" id="LabelSettings_lquwl"]
@@ -44,33 +44,36 @@ layer = -1
 
 [node name="ui" parent="CanvasLayer" unique_id=94057453 instance=ExtResource("2_1bvp3")]
 
+[node name="BattleEffectLayer" type="CanvasLayer" parent="." unique_id=1415360272]
+layer = 2
+
 [node name="player_takeaway" parent="." unique_id=1579825371 instance=ExtResource("2_h2yge")]
-position = Vector2(120, 430)
+position = Vector2(161, 389)
 rotation = -0.0022321607
 texture = ExtResource("5_5vw27")
 
 [node name="player_chicken" parent="." unique_id=1670085131 instance=ExtResource("2_h2yge")]
-position = Vector2(260, 560)
+position = Vector2(265, 499)
 _playerTeamIndex = 1
 
 [node name="player_rabbit" parent="." unique_id=1087659926 instance=ExtResource("2_h2yge")]
-position = Vector2(400, 475)
+position = Vector2(403, 363)
 texture = ExtResource("6_kek77")
 _playerTeamIndex = 2
 
 [node name="player_support" parent="." unique_id=1198453772 instance=ExtResource("2_h2yge")]
-position = Vector2(540, 605)
+position = Vector2(507, 486)
 _playerTeamIndex = 3
 
 [node name="enemy" parent="." unique_id=906378511 instance=ExtResource("3_h2yge")]
-position = Vector2(932.99994, 410.00003)
+position = Vector2(945, 415)
 scale = Vector2(4.101561, 3.967815)
 
 [node name="EnemyNameLabel" type="Label" parent="." unique_id=1835330291]
-offset_left = 740.0
-offset_top = 547.0
-offset_right = 1014.0
-offset_bottom = 605.0
+offset_left = 804.0
+offset_top = 192.0
+offset_right = 1080.0
+offset_bottom = 240.0
 label_settings = SubResource("LabelSettings_lquwl")
 horizontal_alignment = 1
 vertical_alignment = 1
@@ -90,4 +93,6 @@ amount = 30
 lifetime = 0.5
 process_material = SubResource("ParticleProcessMaterial_kek77")
 
-[node name="ParticleEffectManager" parent="." unique_id=2086645421 instance=ExtResource("9_kek77")]
+[node name="BattleEffects" type="Node2D" parent="BattleEffectLayer" unique_id=381084916]
+
+[node name="ParticleEffectManager" parent="BattleEffectLayer" unique_id=2086645421 instance=ExtResource("9_kek77")]
